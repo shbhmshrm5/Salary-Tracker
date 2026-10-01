@@ -13,13 +13,18 @@ def bounds(node):
     return list(map(int,re.findall(r'\d+',node.attrib['bounds'])))
 
 def tap_text(text):
-    for node in dump().iter('node'):
-        if node.attrib.get('text')==text:
-            x1,y1,x2,y2=bounds(node)
-            adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
-            time.sleep(1)
-            return
-    raise AssertionError('Missing UI text: '+text)
+    tree=dump()
+    candidates=[]
+    for item in tree.iter('node'):
+        labels=[item.attrib.get('text',''),item.attrib.get('content-desc','')]
+        if any(text==label.strip() for label in labels): candidates.insert(0,item)
+        elif any(text in label for label in labels): candidates.append(item)
+    if not candidates:
+        Path('native-previews/last-ui.xml').write_text(ET.tostring(tree,encoding='unicode'))
+        raise AssertionError('Missing UI text or description: '+text)
+    x1,y1,x2,y2=bounds(candidates[0])
+    adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
+    time.sleep(2)
 
 def verify(name):
     Path('native-previews').mkdir(exist_ok=True)
