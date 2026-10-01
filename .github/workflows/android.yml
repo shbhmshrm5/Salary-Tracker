@@ -24,6 +24,21 @@ jobs:
           cmdline-tools-version: '11076708'
       - name: Install Android SDK packages
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Keep the signing key for future updates
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: salary-signing-key-v1
+      - name: Check mobile screens
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+          node tests/mobile.cjs
+      - name: Save screen previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: Salary-screen-previews
+          path: previews/
       - name: Build and check Android app
         run: gradle assembleDebug lintDebug --no-daemon
       - name: Save installation file
