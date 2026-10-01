@@ -1,0 +1,2 @@
+Bank symbols sourced from https://github.com/praveenpuglia/indian-banks/tree/main/assets/logos
+Retrieved 2026-10-01. Bank trademarks belong to their respective owners. Used to identify user-selected accounts; no affiliation implied.
