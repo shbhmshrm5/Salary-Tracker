@@ -40,13 +40,14 @@ jobs:
           npm install --no-save playwright
           npx playwright install --with-deps chromium
           node tests/mobile.cjs
+          node tests/v2.cjs
       - name: Save screen previews
         uses: actions/upload-artifact@v4
         with:
           name: Salary-screen-previews
           path: previews/
       - name: Build and check Android app
-        run: gradle assembleDebug lintDebug --no-daemon
+        run: gradle testDebugUnitTest assembleDebug lintDebug --no-daemon
       - name: Save installation file
         uses: actions/upload-artifact@v4
         with:
