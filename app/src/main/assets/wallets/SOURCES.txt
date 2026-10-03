@@ -1,0 +1,4 @@
+Google Pay: https://github.com/gilbarbara/logos/blob/main/logos/google-pay.svg
+PhonePe: https://github.com/simple-icons/simple-icons/blob/develop/icons/phonepe.svg (brand purple)
+CRED shield: https://github.com/LeddaZ/lawnicons/blob/6a481885740d029fb9e1bb4b251ce035e4de5698/svgs/cred.svg
+Logos identify manually tracked accounts; no connection or affiliation.
