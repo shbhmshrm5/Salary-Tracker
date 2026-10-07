@@ -30,7 +30,7 @@ function setTheme(name,save=true){
   palette=name==='teal'?['#236671','#4995a0','#8dc4cc','#c3e2e7']:name==='amoled'?['#a9caff','#739bce','#46678e','#2c4059']:['#365d90','#588ccc','#97bcec','#c8ddf7'];
   document.querySelectorAll('[data-theme-choice]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.themeChoice===name));
   if(window.Android&&typeof Android.setTheme==='function')Android.setTheme(name);
-  if($('month').value&&state)render();
+  if($('month')?.value&&$('homeDonut')&&state)render();
 }
 function preparePayer(r){
   $('paidBy').value=r?.paidBy==='other'?'other':'me';$('payerName').value=r?.person||'';$('repayNeeded').value=r?.repayNeeded?'yes':'no';

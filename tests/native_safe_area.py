@@ -13,18 +13,33 @@ def bounds(node):
     return list(map(int,re.findall(r'\d+',node.attrib['bounds'])))
 
 def tap_text(text):
-    tree=dump()
-    candidates=[]
-    for item in tree.iter('node'):
-        labels=[item.attrib.get('text',''),item.attrib.get('content-desc','')]
-        if any(text==label.strip() for label in labels): candidates.insert(0,item)
-        elif any(text in label for label in labels): candidates.append(item)
-    if not candidates:
-        Path('native-previews/last-ui.xml').write_text(ET.tostring(tree,encoding='unicode'))
-        raise AssertionError('Missing UI text or description: '+text)
-    x1,y1,x2,y2=bounds(candidates[0])
-    adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
-    time.sleep(2)
+    for attempt in range(5):
+        tree=dump()
+        nodes=list(tree.iter('node'))
+        # An overloaded emulator may show a system ANR; allow its UI to recover.
+        if any("isn't responding" in n.attrib.get('text','') for n in nodes):
+            wait=next((n for n in nodes if n.attrib.get('text','').lower()=='wait'),None)
+            if wait is not None:
+                x1,y1,x2,y2=bounds(wait)
+                adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
+                time.sleep(5)
+                continue
+        candidates=[]
+        for item in nodes:
+            labels=[item.attrib.get('text',''),item.attrib.get('content-desc','')]
+            if any(text==label.strip() for label in labels): candidates.insert(0,item)
+            elif any(text in label for label in labels): candidates.append(item)
+        for item in candidates:
+            x1,y1,x2,y2=bounds(item)
+            if x2>x1 and y2>y1:
+                adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
+                time.sleep(2)
+                return
+        dims=list(map(int,re.findall(r'(\d+)x(\d+)',adb('shell','wm','size'))[-1]))
+        adb('shell','input','swipe',str(dims[0]//2),str(int(dims[1]*.7)),str(dims[0]//2),str(int(dims[1]*.35)),'400')
+        time.sleep(2)
+    Path('native-previews/last-ui.xml').write_text(ET.tostring(tree,encoding='unicode'))
+    raise AssertionError('Missing UI text or description: '+text)
 
 def verify(name):
     Path('native-previews').mkdir(exist_ok=True)
