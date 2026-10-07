@@ -44,12 +44,12 @@ adb('install','-r','app/build/outputs/apk/debug/app-debug.apk')
 adb('shell','wm','dismiss-keyguard')
 print(adb('shell','am','start','-W','-n','com.shubham.salarytracker/.MainActivity'),flush=True)
 time.sleep(15)
-verify('dark-home')
+verify('light-home')
 try:
     tap_text('More')
-    tap_text('White & Tangerine')
+    tap_text('AMOLED black')
     tap_text('Home')
-    verify('light-home')
+    verify('amoled-home')
 except subprocess.CalledProcessError:
     print('Accessibility dump unavailable; native bounds and screenshots are checked directly.',flush=True)
 # Simulate a taller camera cutout: spacing must follow the OS, not a fixed gap.

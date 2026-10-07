@@ -7,7 +7,7 @@ public class MainActivity extends Activity {
  // move HTML content below system bars on edge-to-edge Android devices.
  if(Build.VERSION.SDK_INT>=30)getWindow().setDecorFitsSystemWindows(false);
  else getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
- safeArea=new FrameLayout(this);safeArea.setBackgroundColor(Color.parseColor("#111820"));
+ safeArea=new FrameLayout(this);safeArea.setBackgroundColor(Color.parseColor("#000000"));
  web=new WebView(this);safeArea.addView(web,new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT));
  safeArea.setOnApplyWindowInsetsListener((v,insets)->{
   if(Build.VERSION.SDK_INT>=30){
@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
  web.addJavascriptInterface(new Object(){
  @JavascriptInterface public String loadData(){try{return ledger.load();}catch(Exception e){return "DATABASE_ERROR";}}
  @JavascriptInterface public boolean saveData(String data){try{ledger.save(data);return true;}catch(Exception e){return false;}}
-@JavascriptInterface public void setTheme(String name){runOnUiThread(()->{boolean light="tangerine".equals(name);int bg=android.graphics.Color.parseColor(light?"#FFFFFF":"#111820");web.setBackgroundColor(bg);safeArea.setBackgroundColor(bg);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);if(Build.VERSION.SDK_INT>=30){
+@JavascriptInterface public void setTheme(String name){runOnUiThread(()->{boolean light=!"amoled".equals(name);int bg=android.graphics.Color.parseColor("amoled".equals(name)?"#000000":"teal".equals(name)?"#F3F8F8":"#F6F8FC");web.setBackgroundColor(bg);safeArea.setBackgroundColor(bg);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);if(Build.VERSION.SDK_INT>=30){
  WindowInsetsController controller=getWindow().getInsetsController();
  int appearance=WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS|WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
  if(controller!=null)controller.setSystemBarsAppearance(light?appearance:0,appearance);
