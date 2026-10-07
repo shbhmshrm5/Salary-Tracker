@@ -2,6 +2,6 @@ plugins { id 'com.android.application' }
 android { namespace 'com.shubham.salarytracker'; compileSdk 35
  signingConfigs { stableDebug { storeFile file('../.signing/salary.keystore'); storePassword 'android'; keyAlias 'androiddebugkey'; keyPassword 'android' } }
  buildTypes { debug { signingConfig signingConfigs.stableDebug } }
- defaultConfig { applicationId 'com.shubham.salarytracker'; minSdk 26; targetSdk 35; versionCode 11; versionName '3.0' } }
+ defaultConfig { applicationId 'com.shubham.salarytracker'; minSdk 26; targetSdk 35; versionCode 12; versionName '3.1' } }
 
 dependencies { testImplementation 'junit:junit:4.13.2'; testImplementation 'org.robolectric:robolectric:4.14.1' }
