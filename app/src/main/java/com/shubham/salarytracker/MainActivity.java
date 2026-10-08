@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
  setContentView(safeArea);safeArea.requestApplyInsets();
  if(Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,this::handleAppBack);
  web.getSettings().setJavaScriptEnabled(true);web.getSettings().setDomStorageEnabled(true);web.getSettings().setAllowFileAccess(true);web.getSettings().setAllowFileAccessFromFileURLs(false);web.getSettings().setAllowUniversalAccessFromFileURLs(false);
- web.setWebViewClient(new WebViewClient(){public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){return !request.getUrl().toString().equals("file:///android_asset/index.html");}});
+ web.setWebViewClient(new WebViewClient(){public void onPageFinished(WebView view,String url){if(pendingVoiceText!=null)sendVoiceResult(pendingVoiceText,pendingVoiceError);}public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){return !request.getUrl().toString().equals("file:///android_asset/index.html");}});
  web.setWebChromeClient(new WebChromeClient(){public boolean onJsAlert(WebView v,String u,String msg,JsResult r){new android.app.AlertDialog.Builder(MainActivity.this).setMessage(msg).setPositiveButton("OK",(d,w)->r.confirm()).setOnCancelListener(d->r.cancel()).show();return true;}public boolean onJsConfirm(WebView v,String u,String msg,JsResult r){new android.app.AlertDialog.Builder(MainActivity.this).setMessage(msg).setPositiveButton("Continue",(d,w)->r.confirm()).setNegativeButton("Cancel",(d,w)->r.cancel()).setOnCancelListener(d->r.cancel()).show();return true;}public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> cb,FileChooserParams p){if(chooser!=null)chooser.onReceiveValue(null);chooser=cb;Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("application/json");i.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(i,12);return true;}});
  web.addJavascriptInterface(new Object(){
  @JavascriptInterface public void startVoice(String language){runOnUiThread(()->launchVoice(language));}
@@ -44,7 +44,7 @@ public class MainActivity extends Activity {
  int layout=View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
  getWindow().getDecorView().setSystemUiVisibility(layout|(light?(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR):0));
  }safeArea.requestApplyInsets();});}@JavascriptInterface public void exportFile(String name,String data,String mime){runOnUiThread(()->{if(exportText!=null){Toast.makeText(MainActivity.this,"Finish the current export first",Toast.LENGTH_SHORT).show();return;}exportName=name;exportText=data;Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType(mime);i.putExtra(Intent.EXTRA_TITLE,name);startActivityForResult(i,13);});}},"Android");web.loadUrl("file:///android_asset/index.html");}
- private boolean voicePending=false;
+ private boolean voicePending=false; private String pendingVoiceText,pendingVoiceError;
  private void launchVoice(String language){
   if(voicePending)return;
   Intent speech=new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -54,7 +54,7 @@ public class MainActivity extends Activity {
   speech.putExtra(android.speech.RecognizerIntent.EXTRA_MAX_RESULTS,1);
   try{voicePending=true;startActivityForResult(speech,14);}catch(android.content.ActivityNotFoundException e){voicePending=false;sendVoiceResult("","No speech service is available. Enable a speech service on your phone, or type the command.");}catch(SecurityException e){voicePending=false;sendVoiceResult("","Speech access was denied. Check your phone’s speech-service permissions, or type the command.");}
  }
- private void sendVoiceResult(String text,String error){if(web!=null)web.evaluateJavascript("window.onVoiceResult && window.onVoiceResult("+org.json.JSONObject.quote(text)+","+org.json.JSONObject.quote(error)+")",null);}
+ private void sendVoiceResult(String text,String error){pendingVoiceText=text;pendingVoiceError=error;if(web!=null)web.evaluateJavascript("(function(){if(!window.onVoiceResult)return false;window.onVoiceResult("+org.json.JSONObject.quote(text)+","+org.json.JSONObject.quote(error)+");return true;})()",result->{if("true".equals(result)){pendingVoiceText=null;pendingVoiceError=null;}});}
  @Override protected void onResume(){super.onResume();if(web!=null)web.evaluateJavascript("window.onAppResume && window.onAppResume()",null);}
  @Override public void onBackPressed(){handleAppBack();}
  private void handleAppBack(){

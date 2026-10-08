@@ -16,14 +16,14 @@ function initVoice(){
   document.querySelector('main').insertAdjacentHTML('beforeend',`<dialog id="voiceDialog" aria-labelledby="voiceTitle"><div class="dialog-head"><h2 id="voiceTitle">Add by voice</h2><button onclick="$('voiceDialog').close()" aria-label="Close voice entry">✕</button></div><p class="notice">Try “Spent 250 rupees on lunch from HDFC” or “Father paid 1000 for shopping”. Nothing is saved until you review and tap Save.</p><label for="voiceLanguage">Speaking language</label><select id="voiceLanguage"><option value="en-IN">English / Hinglish</option><option value="hi-IN">Hindi / हिन्दी</option></select><p class="notice">Your phone’s speech service handles the audio and may use the internet. Salary Tracker does not store audio. If speech is unavailable, type below.</p><button id="voiceListen" class="primary" onclick="startVoice()">Tap to speak</button><label for="voiceText">What you said · editable</label><textarea id="voiceText" rows="3" maxlength="500" placeholder="Spent 250 rupees on lunch" autocomplete="off"></textarea><p id="voiceStatus" class="notice" role="status"></p><button id="voiceReview" class="primary" onclick="reviewVoice()">Review details</button></dialog>`);
   try{$('voiceLanguage').value=localStorage.getItem('salary-voice-language')||'en-IN'}catch{}
   $('voiceLanguage').onchange=()=>{try{localStorage.setItem('salary-voice-language',$('voiceLanguage').value)}catch{}};
-  window.onVoiceResult=function(text,error){$('voiceListen').disabled=false;if(!$('voiceDialog').open)return;if(text){$('voiceText').value=String(text).slice(0,500);$('voiceStatus').textContent='Check the words, then tap Review details.'}else $('voiceStatus').textContent=error||'No speech received. Try again or type the command.'};
+  window.onVoiceResult=function(text,error){$('voiceListen').disabled=false;if(!$('voiceDialog').open){if(text)openVoice();else return}if(text){$('voiceText').value=String(text).slice(0,500);$('voiceStatus').textContent='Check the words, then tap Review details.'}else $('voiceStatus').textContent=error||'No speech received. Try again or type the command.'};
   window.onAppResume=refreshCurrentDate;document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshCurrentDate()});setInterval(refreshCurrentDate,30000);
 }
 function refreshCurrentDate(){
   const now=today();if(!lastLocalDay){lastLocalDay=now;return}if(now===lastLocalDay)return;
   const previous=lastLocalDay;lastLocalDay=now;
   if(reportMode==='month'&&$('month').value===previous.slice(0,7))$('month').value=now.slice(0,7);
-  if(page==='entry'&&!editing&&!entryDateChosen&&!voiceDateChosen&&$('date').value===previous){$('date').value=now;entrySnapshot=formSnapshot()}
+  if(page==='entry'&&!editing&&!entryDateChosen&&!voiceDateChosen&&$('date').value===previous){$('date').value=now;try{entrySnapshot=JSON.stringify(JSON.parse(entrySnapshot).map(([id,value,checked])=>[id,id==='date'?now:value,checked]))}catch{}}
   $('openingDate').max=now;if(state)render();
 }
 function openVoice(){
