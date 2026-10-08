@@ -8,7 +8,7 @@ public class MainActivity extends Activity {
  if(Build.VERSION.SDK_INT>=30)getWindow().setDecorFitsSystemWindows(false);
  else getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
  safeArea=new FrameLayout(this);safeArea.setBackgroundColor(Color.parseColor("#000000"));
- web=new WebView(this);safeArea.addView(web,new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT));
+ web=new WebView(this);web.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);safeArea.addView(web,new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT));
  safeArea.setOnApplyWindowInsetsListener((v,insets)->{
   if(Build.VERSION.SDK_INT>=30){
    int types=WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout();
@@ -33,6 +33,7 @@ public class MainActivity extends Activity {
  web.setWebViewClient(new WebViewClient(){public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){return !request.getUrl().toString().equals("file:///android_asset/index.html");}});
  web.setWebChromeClient(new WebChromeClient(){public boolean onJsAlert(WebView v,String u,String msg,JsResult r){new android.app.AlertDialog.Builder(MainActivity.this).setMessage(msg).setPositiveButton("OK",(d,w)->r.confirm()).setOnCancelListener(d->r.cancel()).show();return true;}public boolean onJsConfirm(WebView v,String u,String msg,JsResult r){new android.app.AlertDialog.Builder(MainActivity.this).setMessage(msg).setPositiveButton("Continue",(d,w)->r.confirm()).setNegativeButton("Cancel",(d,w)->r.cancel()).setOnCancelListener(d->r.cancel()).show();return true;}public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> cb,FileChooserParams p){if(chooser!=null)chooser.onReceiveValue(null);chooser=cb;Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("application/json");i.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(i,12);return true;}});
  web.addJavascriptInterface(new Object(){
+ @JavascriptInterface public void startVoice(String language){runOnUiThread(()->launchVoice(language));}
  @JavascriptInterface public String loadData(){try{return ledger.load();}catch(Exception e){return "DATABASE_ERROR";}}
  @JavascriptInterface public boolean saveData(String data){try{ledger.save(data);return true;}catch(Exception e){return false;}}
 @JavascriptInterface public void setTheme(String name){runOnUiThread(()->{boolean light=!"amoled".equals(name);darkMode=!light;int bg=android.graphics.Color.parseColor("amoled".equals(name)?"#000000":"teal".equals(name)?"#F3F8F8":"#F6F8FC");web.setBackgroundColor(bg);safeArea.setBackgroundColor(bg);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);if(Build.VERSION.SDK_INT>=30){
@@ -43,6 +44,18 @@ public class MainActivity extends Activity {
  int layout=View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
  getWindow().getDecorView().setSystemUiVisibility(layout|(light?(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR):0));
  }safeArea.requestApplyInsets();});}@JavascriptInterface public void exportFile(String name,String data,String mime){runOnUiThread(()->{if(exportText!=null){Toast.makeText(MainActivity.this,"Finish the current export first",Toast.LENGTH_SHORT).show();return;}exportName=name;exportText=data;Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType(mime);i.putExtra(Intent.EXTRA_TITLE,name);startActivityForResult(i,13);});}},"Android");web.loadUrl("file:///android_asset/index.html");}
+ private boolean voicePending=false;
+ private void launchVoice(String language){
+  if(voicePending)return;
+  Intent speech=new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+  speech.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL,android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+  speech.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE,"hi-IN".equals(language)?"hi-IN":"en-IN");
+  speech.putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT,"Say your expense, income or leave dates");
+  speech.putExtra(android.speech.RecognizerIntent.EXTRA_MAX_RESULTS,1);
+  try{voicePending=true;startActivityForResult(speech,14);}catch(android.content.ActivityNotFoundException e){voicePending=false;sendVoiceResult("","No speech service is available. Enable a speech service on your phone, or type the command.");}catch(SecurityException e){voicePending=false;sendVoiceResult("","Speech access was denied. Check your phone’s speech-service permissions, or type the command.");}
+ }
+ private void sendVoiceResult(String text,String error){if(web!=null)web.evaluateJavascript("window.onVoiceResult && window.onVoiceResult("+org.json.JSONObject.quote(text)+","+org.json.JSONObject.quote(error)+")",null);}
+ @Override protected void onResume(){super.onResume();if(web!=null)web.evaluateJavascript("window.onAppResume && window.onAppResume()",null);}
  @Override public void onBackPressed(){handleAppBack();}
  private void handleAppBack(){
   if(web==null)return;
@@ -51,5 +64,5 @@ public class MainActivity extends Activity {
     .setTitle("Close Salary Tracker?").setMessage("Your saved entries are safe.").setNegativeButton("Stay",(d,w)->d.dismiss()).setPositiveButton("Close",(d,w)->finish()).show();
   });
  }
- protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);Uri uri=result==RESULT_OK&&data!=null?data.getData():null;if(request==12&&chooser!=null){chooser.onReceiveValue(uri==null?null:new Uri[]{uri});chooser=null;}if(request==13){boolean success=false;String name=exportName;if(uri!=null&&exportText!=null){try(OutputStream out=getContentResolver().openOutputStream(uri)){if(out==null)throw new java.io.IOException("No output stream");out.write(exportText.getBytes(StandardCharsets.UTF_8));out.flush();success=true;Toast.makeText(this,"File saved",Toast.LENGTH_SHORT).show();}catch(Exception e){success=false;Toast.makeText(this,"Could not save file",Toast.LENGTH_LONG).show();}}exportText=null;exportName=null;web.evaluateJavascript("window.onExportResult && window.onExportResult("+org.json.JSONObject.quote(name==null?"":name)+","+success+")",null);}}
+ protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==14){voicePending=false;java.util.ArrayList<String> words=data==null?null:data.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS);if(result==RESULT_OK&&words!=null&&!words.isEmpty())sendVoiceResult(words.get(0),"");else sendVoiceResult("",result==RESULT_CANCELED?"Speech cancelled. Nothing was saved.":"Speech was not understood. Try again or type the command.");return;}Uri uri=result==RESULT_OK&&data!=null?data.getData():null;if(request==12&&chooser!=null){chooser.onReceiveValue(uri==null?null:new Uri[]{uri});chooser=null;}if(request==13){boolean success=false;String name=exportName;if(uri!=null&&exportText!=null){try(OutputStream out=getContentResolver().openOutputStream(uri)){if(out==null)throw new java.io.IOException("No output stream");out.write(exportText.getBytes(StandardCharsets.UTF_8));out.flush();success=true;Toast.makeText(this,"File saved",Toast.LENGTH_SHORT).show();}catch(Exception e){success=false;Toast.makeText(this,"Could not save file",Toast.LENGTH_LONG).show();}}exportText=null;exportName=null;web.evaluateJavascript("window.onExportResult && window.onExportResult("+org.json.JSONObject.quote(name==null?"":name)+","+success+")",null);}}
 }

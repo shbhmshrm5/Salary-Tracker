@@ -57,7 +57,7 @@ function saveExpenseEntry(e){
     r.repayments=old.repayments;
     if(amount<repaidCents(old)||r.repayments.some(p=>p.date<date)){message('The expense must cover repayments and be dated on or before them.');return}
   }
-  if(update({records:state.records.filter(x=>x.id!==editing).concat(r)})){$('month').value=date.slice(0,7);show(entryReturn);message('Entry saved')}
+  if(update({records:state.records.filter(x=>x.id!==editing).concat(r)})){$('month').value=date.slice(0,7);$('note').value='';$('amount').value='';$('date').value=today();editing=null;show(entryReturn);message('Entry saved')}
 }
 function renderDesign(list){
   $('pageTitle').textContent=page==='home'?'Hi, Shubham':page==='more'?'Settings':$('pageTitle').textContent;
