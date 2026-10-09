@@ -57,7 +57,7 @@ function saveExpenseEntry(e){
     r.repayments=old.repayments;
     if(amount<repaidCents(old)||r.repayments.some(p=>p.date<date)){message('The expense must cover repayments and be dated on or before them.');return}
   }
-  if(!other&&!confirmOutflow(accountId,kind(category)==='income'?-amount:amount,date,'record',editing))return;if(update({records:state.records.filter(x=>x.id!==editing).concat(r)})){reportMode='month';$('month').value=date.slice(0,7);categoryFilter=null;$('expenseSearch').value='';$('note').value='';$('amount').value='';$('date').value=today();editing=null;show(entryReturn);message('Entry saved')}
+  if(!other&&!confirmOutflow(accountId,kind(category)==='income'?-amount:amount,date,'record',editing))return;if(update({records:state.records.filter(x=>x.id!==editing).concat(r)})){reportMode='month';$('month').value=date.slice(0,7);categoryFilter=null;$('expenseSearch').value='';$('note').value='';$('amount').value='';$('date').value=today();editing=null;entrySnapshot=formSnapshot();show(entryReturn);message('Entry saved')}
 }
 function renderDesign(list){
   $('pageTitle').textContent=page==='home'?'Hi, Shubham':page==='more'?'Settings':$('pageTitle').textContent;
