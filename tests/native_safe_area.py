@@ -65,7 +65,7 @@ try:
     adb('shell','input','keyevent','4')
     time.sleep(2)
     verify('back-from-calendar')
-    tap_text('More')
+    tap_text('Settings')
     tap_text('AMOLED black')
     tap_text('Home')
     verify('amoled-home')
