@@ -31,7 +31,7 @@ function initUsability(){
  // Guard before any opener can overwrite a draft on the same screen.
  for(const name of ['openEntry','openAccount','openTransfer','openLeave']){const original=window[name];window[name]=function(...args){if(entryPages.includes(page)&&formSnapshot()!==entrySnapshot&&!allowNavigation&&!confirm('Discard these unsaved changes?'))return false;allowNavigation=true;try{return original(...args)}finally{allowNavigation=false}}}
  const top=node('div','quick-actions');top.append(action('Transfer',()=>openTransfer()),action('All transactions',()=>openHistory()));$('allAccountsLink').after(top);
- const accounts=$('accounts');const topActions=node('div','quick-actions');topActions.append(action('Transfer',()=>openTransfer()),action('Add account',()=>openAccount()));accounts.prepend(topActions);
+ const accounts=$('accounts');const topActions=node('div','quick-actions');const transfer=$('transferButton'),addAccount=accounts.querySelector(':scope > button.primary');transfer.textContent='Transfer';transfer.removeAttribute('style');transfer.className='link-button';addAccount.textContent='Add account';addAccount.className='link-button';topActions.append(transfer,addAccount);accounts.prepend(topActions);
  const period=node('p','notice');period.id='transferPeriod';$('transferRows').before(period);
  $('home').querySelector('.section-head .link-button').onclick=()=>openHistory();
  document.querySelector('nav [data-page=more] span').textContent='Settings';
