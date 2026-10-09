@@ -8,7 +8,7 @@ function initDesign(){
     <div id="paidOthersSummary" class="paid-others hidden"></div><button class="insights-link" onclick="show('insights')">See insights →</button></div>
     <div class="section-head"><h2>Recent transactions</h2><button class="link-button" onclick="show('expenses')">View all</button></div><div id="recentRows"></div>
     <div class="hidden" aria-hidden="true"><span id="spent"></span><div id="expenseTiles"></div><button id="allCategoryTiles"></button></div>
-    <div class="action-dock"><button class="floating" onclick="openEntry()">＋ Add expense</button></div>`;
+    <div class="action-dock"><button class="floating" onclick="openEntry()">+ Add expense</button></div>`;
   const settings=node('button','header-settings');settings.type='button';settings.setAttribute('aria-label','Settings');settings.innerHTML=icon('settings');settings.onclick=()=>show('more');document.querySelector('header').append(settings);
   const appearance=document.querySelector('.theme-choices');appearance.innerHTML=[['blue','Soft blue','Light & clear'],['teal','Muted teal','Light & calm'],['amoled','AMOLED black','True black']].map(([key,title,desc])=>`<button class="theme-choice" data-theme-choice="${key}" onclick="setTheme('${key}')"><div class="theme-swatch ${key}">₹</div><strong>${title}</strong><small>${desc}</small></button>`).join('');
   const more=$('more'),people=node('button','settings-row'),cal=node('button','settings-row');
@@ -50,14 +50,14 @@ function saveExpenseEntry(e){
   if(!Number.isSafeInteger(amount)||amount<=0||!validDate(date))return;
   const old=state.records.find(r=>r.id===editing),accountId=other?null:$('entryAccount').value||null;
   if(!other&&!accountId&&!(old&&!old.accountId&&old.paidBy!=='other')){message('Choose an account in More → Accounts first');return}
-  const r={id:editing||uid(),amount:amount/100,category,date,note:$('note').value.trim(),accountId,paidBy:other?'other':'me'};
-  if(other){r.person=$('payerName').value.trim();r.repayNeeded=$('repayNeeded').value==='yes';if(!r.person){message('Enter who paid');return}}
+  const r={...old,id:editing||uid(),createdAt:old?.createdAt||Date.now(),amount:amount/100,category,date,note:$('note').value.trim(),accountId,paidBy:other?'other':'me'};
+  if(other){r.person=canonicalPerson($('payerName').value);r.repayNeeded=$('repayNeeded').value==='yes';if(!r.person){message('Enter who paid');return}}
   if((old?.repayments||[]).length){
-    if(!other||!r.repayNeeded||r.person!==old.person){message('Remove existing repayments before changing who paid or repayment status.');return}
+    if(!other||!r.repayNeeded){message('This expense has repayments. Keep Someone else and repayment enabled, or remove those repayments first.');return}
     r.repayments=old.repayments;
     if(amount<repaidCents(old)||r.repayments.some(p=>p.date<date)){message('The expense must cover repayments and be dated on or before them.');return}
   }
-  if(update({records:state.records.filter(x=>x.id!==editing).concat(r)})){$('month').value=date.slice(0,7);$('note').value='';$('amount').value='';$('date').value=today();editing=null;show(entryReturn);message('Entry saved')}
+  if(!other&&!confirmOutflow(accountId,kind(category)==='income'?-amount:amount,date,'record',editing))return;if(update({records:state.records.filter(x=>x.id!==editing).concat(r)})){reportMode='month';$('month').value=date.slice(0,7);categoryFilter=null;$('expenseSearch').value='';$('note').value='';$('amount').value='';$('date').value=today();editing=null;show(entryReturn);message('Entry saved')}
 }
 function renderDesign(list){
   $('pageTitle').textContent=page==='home'?'Hi, Shubham':page==='more'?'Settings':$('pageTitle').textContent;
@@ -74,7 +74,7 @@ function renderDesign(list){
   const recent=$('recentRows');recent.replaceChildren();if(!list.length)recent.append(node('p','empty','Your recent entries will appear here.'));
   for(const r of list.slice(0,3)){
     const row=node('button','recent-row');row.type='button';const glyph=node('span','transaction-icon');glyph.innerHTML=icon(r.category);
-    const text=node('span','transaction-text');text.append(node('strong',null,r.note||r.category),node('small',null,r.category+' · '+(r.paidBy==='other'?'Paid by '+r.person:account(r.accountId)?.name||'Unassigned')));
+    const text=node('span','transaction-text');text.append(node('strong',null,r.note||r.category),node('small',null,r.category+' · '+(r.paidBy==='other'?'Paid by '+r.person:(account(r.accountId)?displayAccountName(account(r.accountId)):'Unassigned'))));
     row.append(glyph,text,node('strong','transaction-amount',(kind(r.category)==='income'?'+':'−')+money(r.amount)));row.onclick=()=>openEntry(r.id);recent.append(row);
   }
   const query=($('expenseSearch')?.value||'').trim().toLowerCase();if(query)rows($('expenseRows'),list.filter(r=>kind(r.category)===expenseView&&(!categoryFilter||r.category===categoryFilter)&&[r.note,r.category,r.person,account(r.accountId)?.name].join(' ').toLowerCase().includes(query)));
@@ -87,7 +87,7 @@ function drawHomeDonut(expenses){
   if(!total){holder.append(node('p','empty','Add your first expense to see where your money goes.'));return}
   const chart=node('div','donut'),legend=node('div','donut-legend');let offset=0;const segments=values.map((v,i)=>{const pct=v.value/total*100;const svg=`<circle cx="80" cy="80" r="61" pathLength="100" fill="none" stroke="${palette[i]}" stroke-width="19" stroke-dasharray="${Math.max(.05,pct-(values.length>1?.7:0))} ${100-Math.max(.05,pct-(values.length>1?.7:0))}" stroke-dashoffset="${-offset}" transform="rotate(-90 80 80)"/>`;offset+=pct;return svg}).join('');
   chart.innerHTML=`<svg viewBox="0 0 160 160" role="img" aria-label="Spending by category; amounts and percentages beside the chart">${segments}</svg><div class="donut-centre"><strong>${money(total/100)}</strong><small>Spent</small></div>`;
-  values.forEach((v,i)=>{const row=node('button','donut-item'),dot=node('i','dot');dot.style.background=palette[i];const text=node('span','donut-label');text.append(node('span',null,v.label),node('small',null,money(v.value/100)));row.append(dot,text,node('strong',null,(v.value/total*100).toFixed(1)+'%'));row.onclick=()=>{expenseView='expense';categoryFilter=v.label==='Other categories'?null:v.label;show('expenses')};legend.append(row)});
+  values.forEach((v,i)=>{const row=node('button','donut-item'),dot=node('i','dot');dot.style.background=palette[i];const text=node('span','donut-label');text.append(node('span',null,v.label),node('small',null,money(v.value/100)));row.append(dot,text,node('strong',null,(v.value/total*100).toFixed(1)+'%'));row.onclick=()=>{expenseView='expense';categoryFilter=v.label==='Other categories'?'__other':v.label;otherCategoryNames=[...sums.keys()].filter(c=>!values.slice(0,3).some(v=>v.label===c));show('expenses')};legend.append(row)});
   holder.append(chart,legend);
 }
 function openPeople(){

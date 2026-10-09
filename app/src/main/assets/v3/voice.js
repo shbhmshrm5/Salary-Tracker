@@ -57,17 +57,17 @@ function voiceDate(t,base=today()){
   const hindi=['जनवरी','फरवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितंबर','अक्टूबर','नवंबर','दिसंबर'];
   const m=t.match(new RegExp('(\\d{1,2})(?:st|nd|rd|th)?\\s+('+months.join('|')+'|'+hindi.join('|')+')(?:\\s+(\\d{4}))?'));
   if(m){const n=Math.max(months.indexOf(m[2]),hindi.indexOf(m[2]))+1,date=(m[3]||base.slice(0,4))+'-'+String(n).padStart(2,'0')+'-'+m[1].padStart(2,'0');return {date:validDate(date)?date:'',explicit:true}}
-  if(/\b(kal|tomorrow|dated)\b|\bon\s+\d|कल|तारीख|\d{1,2}[\/.-]\d/.test(t))return {date:'',explicit:true};return {date:base,explicit:false};
+  if(/\b(kal|tomorrow|dated|last|ago|monday|tuesday|wednesday|thursday|friday|saturday|sunday|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\b|\bon\s+\d|कल|तारीख|\d{1,2}[\/.-]\d/.test(t))return {date:'',explicit:true};return {date:base,explicit:false};
 }
 function parseVoice(raw,accounts=state?.accounts||[],base=today()){
   const t=normalVoice(raw),warnings=[],result={amount:null,category:'Other',accountId:null,person:'',repayNeeded:false,note:'',...voiceDate(t,base),warnings};
-  if(/^(?:repay|repaid|transfer|delete|remove)\b/.test(t)){result.unsupported=true;return result}
+  if(/\b(?:transfer|transferred|delete|remove|repaid)\b|^(?:please\s+)?repay\b/.test(t)){result.unsupported=true;return result}
   if(/\bleave\b|छुट्टी|chhutti/.test(t)){
     result.leave=true;const m=t.match(/(?:from\s+)?(\d{1,2})\s*(?:to|से|se|-)\s*(\d{1,2})\s+([a-z]+|[\u0900-\u097f]+)(?:\s+(\d{4}))?/);
     if(m){result.date=voiceDate(m[1]+' '+m[3]+' '+(m[4]||base.slice(0,4)),base).date;result.end=voiceDate(m[2]+' '+m[3]+' '+(m[4]||base.slice(0,4)),base).date}else{result.end=result.date;if(!result.explicit)result.date=result.end=''}return result;
   }
-  result.amount=voiceAmount(t);if(/\band\s+(?:₹\s*)?\d/.test(t)){result.amount=null;warnings.push('Use one transaction per command.');}if(!result.amount||!Number.isSafeInteger(cents(result.amount)))warnings.push('Enter or check the amount.');
-  const income=/\b(received|salary|bonus|income|earned)\b|वेतन|सैलरी|बोनस|आय|मिले/.test(t)&&!/^spent\b/.test(t);
+  result.amount=voiceAmount(t);if(/(?:^|\s)-\s*\d/.test(t)){result.amount=null;warnings.push('Negative amounts need manual review.');}if(/\band\s+(?:₹\s*)?(?:\d|one\b|two\b|three\b|four\b|five\b|six\b|seven\b|eight\b|nine\b|ten\b|twenty\b|thirty\b|forty\b|fifty\b)/.test(t)&&/\b(?:on|for)\b.+\band\b/.test(t)){result.amount=null;warnings.push('Use one transaction per command.');}if(/\band\s+(?:₹\s*)?\d/.test(t)){result.amount=null;warnings.push('Use one transaction per command.');}if(!result.amount||!Number.isSafeInteger(cents(result.amount)))warnings.push('Enter or check the amount.');
+  const income=/\b(received|salary|bonus|income|earned)\b|वेतन|सैलरी|बोनस|आय|मिले/.test(t)&&!/\b(spent|spend|paid|pay|bought)\b|खर्च/.test(t);
   if(income)result.category=/bonus|बोनस/.test(t)?'Bonus':/salary|वेतन|सैलरी/.test(t)?'Salary':'Other income';
   else{
     const cats=[['Food',/lunch|dinner|breakfast|food|restaurant|khana|खाना|खाने|लंच|डिनर|नाश्ता/],['Groceries',/grocer|dmart|d mart|kirana|किराना|सब्जी|सब्ज़ी/],['Travel',/travel|metro|taxi|uber|cab|petrol|diesel|मेट्रो|पेट्रोल|टैक्सी/],['Shopping',/shopping|clothes|शॉपिंग|कपड़े/],['Mobile recharge',/recharge|रिचार्ज/],['Bills',/bills?|electricity|बिजली|बिल/],['Health',/doctor|medicine|hospital|दवाई|दवा|डॉक्टर/],['Rent',/rent|किराया/],['Education',/school|fees|tuition|फीस/]];
@@ -76,12 +76,12 @@ function parseVoice(raw,accounts=state?.accounts||[],base=today()){
   const people=[['Father',/\bfather\b|\bdad\b|\bpapa\b|पापा|पिताजी|पिता/],['Mother',/\bmother\b|\bmom\b|\bmummy\b|मम्मी|माँ|मां/],['Wife',/\bwife\b|पत्नी/]];
   if(!income&&/(?:father|dad|papa|mother|mom|mummy|wife)\s+(?:has\s+)?(?:paid|ne\b)|(?:पापा|पिताजी|पिता|मम्मी|माँ|मां|पत्नी)\s+ने|paid by/.test(t))result.person=people.find(([,re])=>re.test(t))?.[0]||'';
   const named=t.match(/paid by ([a-z]+(?: [a-z]+)?)(?=\s+(?:for|on|₹|\d)|$)/);if(!income&&named)result.person=named[1].replace(/\b\w/g,c=>c.toUpperCase());
-  result.repayNeeded=!!result.person&&/repay|owe|return|वापस|लौटा|उधार/.test(t)&&!/no repayment|dont repay|gift|वापस नहीं/.test(t);
-  const compact=s=>normalVoice(s).replace(/[^a-z0-9\u0900-\u097f]/g,'');
+  result.repayNeeded=!!result.person&&/repay|owe|return|वापस|लौटा|उधार/.test(t)&&!/no repayment|dont(?: need to| have to)? repay|do not(?: need to| have to)? repay|not owed|gift|वापस नहीं/.test(t);
+  const hasName=(text,name)=>(' '+normalVoice(text).replace(/[^a-z0-9\u0900-\u097f]+/g,' ')+' ').includes(' '+normalVoice(name).replace(/[^a-z0-9\u0900-\u097f]+/g,' ')+' ');
   const aliases={HDFC:['hdfc','एचडीएफसी'],SBI:['sbi','एसबीआई'],'Bank of Baroda':['bank of baroda','bob','बैंक ऑफ बड़ौदा'],'AU Small Finance Bank':['au bank','au small finance','एयू बैंक'],ICICI:['icici','आईसीआईसीआई'],Cash:['cash','नकद'],'Google Pay':['google pay','gpay','गूगल पे'],CRED:['cred'],PhonePe:['phonepe','फोनपे']};
-  const mentioned=Object.keys(aliases).filter(k=>aliases[k].some(a=>compact(t).includes(compact(a))));
-  const matches=accounts.filter(a=>(a.name&&compact(t).includes(compact(a.name)))||mentioned.includes(a.bank));
-  if(!result.person){if(matches.length===1)result.accountId=matches[0].id;else if(matches.length>1||mentioned.length){result.needsAccount=true;warnings.push('Choose the account: its name was missing or ambiguous.')}}
+  for(const bank of Object.keys(bankLogos))if(!aliases[bank])aliases[bank]=[bank];const mentioned=Object.keys(aliases).filter(k=>aliases[k].some(a=>hasName(t,a)));
+  const matches=accounts.filter(a=>!a.archived&&((a.name&&hasName(t,a.name))||mentioned.includes(a.bank)));
+  if(!result.person){if(matches.length===1)result.accountId=matches[0].id;else if(matches.length>1||mentioned.length||/\b(?:from|using|via|through|card|bank|wallet)\b/.test(t)){result.needsAccount=true;warnings.push('Choose the account: its name was missing or ambiguous.')}}
   if(!result.date)warnings.push('Choose the date; the spoken date was unclear.');
   if(result.person)warnings.push('Confirm who paid and whether repayment is needed.');
   const note=raw.match(/\bnote\s*[:\-]?\s*(.+)$/i);if(note)result.note=note[1].slice(0,120);

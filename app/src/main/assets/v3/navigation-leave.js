@@ -1,7 +1,7 @@
 // Native Android Back delegates to this route stack; forms stay in the WebView.
 let appRoutes=[],restoringRoute=false,entrySnapshot='',rangeEndEdited=false;
 const entryPages=['entry','accountEntry','transferEntry','leaveEntry'];
-function formSnapshot(){const section=$(page);return section?JSON.stringify([...section.querySelectorAll('input,select')].map(n=>[n.id,n.value,n.checked])):''}
+function formSnapshot(){const section=$(page);return section?JSON.stringify([...section.querySelectorAll('input,select,textarea')].map(n=>[n.id,n.value,n.checked]).concat(page==='entry'?[['category',category,false]]:[])):''}
 function initNavigationAndLeave(){
   const originalShow=show;
   show=function(next){
@@ -29,7 +29,7 @@ function initNavigationAndLeave(){
   $('leaveForm').querySelector('p.notice:not(#leaveRangePreview)').textContent='Each selected date is saved separately, so you can later edit or cancel an individual day.';
   const originalOpenLeave=openLeave;
   openLeave=function(id=null,date=today()){
-    originalOpenLeave(id,date);rangeEndEdited=false;$('leaveEnd').value=$('leaveDate').value;$('leaveEnd').disabled=!!id;$('leaveWeekends').value='include';$('weekendOptions').classList.toggle('hidden',!!id);previewLeaveRange();entrySnapshot=formSnapshot();
+    originalOpenLeave(id,date);rangeEndEdited=false;$('leaveEnd').value=$('leaveDate').value;$('leaveEnd').disabled=!!id;$('leaveWeekends').value=localStorage.getItem('salary-weekends')||'include';$('weekendOptions').classList.toggle('hidden',!!id);previewLeaveRange();entrySnapshot=formSnapshot();
   };
   $('leaveDate').oninput=()=>{if(!rangeEndEdited||$('leaveEnd').value<$('leaveDate').value||editingLeave)$('leaveEnd').value=$('leaveDate').value;previewLeaveRange()};
   $('leaveEnd').oninput=()=>{rangeEndEdited=true;previewLeaveRange()};
@@ -40,7 +40,7 @@ function leaveDates(from,to,skipWeekends){
   if(!validDate(from)||!validDate(to)||from>to)throw Error('Choose a valid From and To date.');
   const dates=[],start=new Date(from+'T12:00:00Z'),end=new Date(to+'T12:00:00Z');
   if((end-start)/86400000>=366)throw Error('Choose a range of up to 366 dates.');
-  for(let d=start;d<=end;d.setUTCDate(d.getUTCDate()+1))if(!skipWeekends||![0,6].includes(d.getUTCDay()))dates.push(d.toISOString().slice(0,10));
+  for(let d=start;d<=end;d.setUTCDate(d.getUTCDate()+1))if(!skipWeekends||!weekendDays().includes(d.getUTCDay()))dates.push(d.toISOString().slice(0,10));
   if(!dates.length)throw Error('No days selected. Include weekends or choose other dates.');return dates;
 }
 function previewLeaveRange(){
@@ -50,12 +50,12 @@ function saveLeaveRange(e){
   e.preventDefault();let dates;try{dates=leaveDates($('leaveDate').value,editingLeave?$('leaveDate').value:$('leaveEnd').value,!editingLeave&&$('leaveWeekends').value==='skip')}catch(err){message(err.message);return}
   const days=Number($('leaveDays').value),status=$('leaveStatus').value,reason=$('leaveReason').value.trim();
   if(status==='taken'&&dates.some(d=>d>today())){message('For future dates choose Planned. Mark them Taken after the leave.');return}
-  const newLeaves=dates.map(date=>({id:editingLeave||uid(),date,days,status,reason})),leaves=state.leaves.filter(x=>x.id!==editingLeave).concat(newLeaves);
-  try{validateLeaves(leaves)}catch{message('Check the details. Total leave on one date cannot exceed 1 day. No dates were saved.');return}
-  if(update({leaves})){
+  const groupId=editingLeave?state.leaves.find(l=>l.id===editingLeave)?.groupId:uid();const newLeaves=dates.map(date=>({id:editingLeave||uid(),groupId,date,days,status,reason})),leaves=state.leaves.filter(x=>x.id!==editingLeave).concat(newLeaves);
+  try{validateLeaves(leaves)}catch{message('Check these dates: '+conflictingLeaveDates(leaves).map(displayDate).join(', ')+'. Total leave cannot exceed 1 day. No dates were saved.');return}
+  if(update({leaves})){saveWeekendPreference();
     const from=dates[0],to=dates.at(-1);leaveMonth=from.slice(0,7);
     if(leaveMode==='custom'&&(!inRange(from,leaveRange())||!inRange(to,leaveRange()))){$('leaveFrom').value=from;$('leaveTo').value=to}
     else leaveYear=leaveMode==='fy'&&Number(from.slice(5,7))<4?Number(from.slice(0,4))-1:Number(from.slice(0,4));
-    show('calendar');message(dates.length===1?'Leave saved':dates.length+' leave dates saved');
+    if(from.slice(0,4)!==to.slice(0,4)){leaveMode='custom';$('leaveFrom').value=from;$('leaveTo').value=to}show('calendar');message(dates.length===1?'Leave saved':dates.length+' leave dates saved');
   }
 }

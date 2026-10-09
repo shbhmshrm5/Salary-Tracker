@@ -21,6 +21,6 @@ function validatePayers(d) {
 function repaidCents(r, asof='9999-12-31') { return (r.repayments || []).filter(p=>p.date<=asof).reduce((sum,p)=>sum+p.amount,0); }
 function owedCents(r, asof=today()) { return r.paidBy==='other' && r.repayNeeded && r.date<=asof ? Math.max(0,cents(r.amount)-repaidCents(r,asof)) : 0; }
 function payerDescription(r) {
-  if (r.paidBy !== 'other') return account(r.accountId)?.name || 'Unassigned account';
+  if (r.paidBy !== 'other') return account(r.accountId)?displayAccountName(account(r.accountId)):'Unassigned account';
   return 'Paid by '+r.person+(r.repayNeeded ? (owedCents(r)>0 ? ' · '+money(owedCents(r)/100)+' to repay' : ' · Repaid') : ' · No repayment');
 }
