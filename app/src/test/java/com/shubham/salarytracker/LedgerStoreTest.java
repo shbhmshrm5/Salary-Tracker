@@ -23,7 +23,7 @@ public class LedgerStoreTest {
   android.content.Context context=RuntimeEnvironment.getApplication();
   context.deleteDatabase("salary-alice.db");context.deleteDatabase("salary-bob.db");
   LedgerStore device=fresh(), alice=new LedgerStore(context,"alice"),bob=new LedgerStore(context,"bob");
-  JSONObject data=empty().put("profile",new JSONObject().put("name","Alice"));data.getJSONArray("records").put(new JSONObject().put("id","only-alice").put("amount",100));
+  JSONObject data=empty().put("version",5).put("profile",new JSONObject().put("name","Alice"));data.getJSONArray("records").put(new JSONObject().put("id","only-alice").put("amount",100));
   alice.save(data.toString());assertEquals("",bob.load());assertEquals("",device.load());alice.close();alice=new LedgerStore(context,"alice");assertEquals("Alice",new JSONObject(alice.load()).getJSONObject("profile").getString("name"));alice.close();bob.close();device.close();
  }
 }

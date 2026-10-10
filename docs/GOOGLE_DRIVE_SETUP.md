@@ -20,3 +20,5 @@ The APK implements Google account authorization through Google Play services Aut
 - Live Google authorization requires the owner's project setup and device testing; CI cannot validate consent or user Drive access.
 
 Google documentation: https://developer.android.com/identity/authorization and https://developers.google.com/workspace/drive/api/guides/appdata
+
+The updated ledger uses backup schema 5. Old schemas 1–4 migrate forward; older app versions reject schema 5 instead of silently treating card debt and refunds as ordinary accounts/expenses.
