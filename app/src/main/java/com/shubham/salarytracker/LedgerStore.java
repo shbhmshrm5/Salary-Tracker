@@ -15,7 +15,8 @@ import java.util.Iterator;
  * One atomic transaction applies a save; unchanged rows are not rewritten. */
 public class LedgerStore extends SQLiteOpenHelper {
  private static final String[] TABLES={"accounts","records","transfers","leaves"};
- public LedgerStore(Context context){super(context,"salary-ledger.db",null,1);}
+ public LedgerStore(Context context){this(context, "");}
+ public LedgerStore(Context context,String namespace){super(context,namespace.isEmpty()?"salary-ledger.db":"salary-"+namespace+".db",null,1);}
  @Override public void onCreate(SQLiteDatabase db){
   for(String table:TABLES)db.execSQL("CREATE TABLE "+table+" (id TEXT PRIMARY KEY NOT NULL, payload TEXT NOT NULL)");
   db.execSQL("CREATE TABLE metadata (id TEXT PRIMARY KEY NOT NULL, payload TEXT NOT NULL)");

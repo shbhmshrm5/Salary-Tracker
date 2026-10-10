@@ -60,14 +60,14 @@ function saveExpenseEntry(e){
   if(!other&&!confirmOutflow(accountId,kind(category)==='income'?-amount:amount,date,'record',editing))return;if(update({records:state.records.filter(x=>x.id!==editing).concat(r)})){reportMode='month';$('month').value=date.slice(0,7);categoryFilter=null;$('expenseSearch').value='';$('note').value='';$('amount').value='';$('date').value=today();editing=null;entrySnapshot=formSnapshot();show(entryReturn);message('Entry saved')}
 }
 function renderDesign(list){
-  $('pageTitle').textContent=page==='home'?'Hi, Shubham':page==='more'?'Settings':$('pageTitle').textContent;
+  $('pageTitle').textContent=page==='home'?(state.profile?.name?'Hi, '+state.profile.name:'Home'):page==='more'?'Settings':$('pageTitle').textContent;
   $('headerSubtitle').classList.toggle('hidden',page==='home');
   $('allAccountsLink').textContent=state.accounts.length+' accounts · View all →';$('allAccountsLink').classList.toggle('hidden',!state.accounts.length);
   // Turn the same account tiles into compact swipeable cards on Home only.
   for(const tile of $('homeAccounts').children){tile.setAttribute('role','button');tile.tabIndex=0;tile.onclick=()=>show('accounts');tile.onkeydown=e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();show('accounts')}}}
   $('homePeriodLabel').textContent=(reportMode==='month'?new Date($('month').value+'-01T12:00:00').toLocaleDateString('en-IN',{month:'long'}):reportRange().label)+' · share of expenses';
   const expenses=list.filter(r=>kind(r.category)==='expense');drawHomeDonut(expenses);
-  const outside=expenses.filter(r=>r.paidBy==='other').reduce((s,r)=>s+cents(r.amount),0),owed=state.records.reduce((s,r)=>s+owedCents(r),0);
+  const outside=expenses.filter(r=>r.paidBy==='other').reduce((s,r)=>s+reportCents(r),0),owed=state.records.reduce((s,r)=>s+owedCents(r),0);
   const details=$('paidOthersSummary');details.replaceChildren();details.classList.toggle('hidden',!outside&&!owed);
   if(outside)details.append(node('span',null,'Includes '+money(outside/100)+' paid by others'));
   if(owed){const b=node('button','link-button',money(owed/100)+' to repay · View');b.onclick=openPeople;details.append(b)}
@@ -75,14 +75,14 @@ function renderDesign(list){
   for(const r of list.slice(0,3)){
     const row=node('button','recent-row');row.type='button';const glyph=node('span','transaction-icon');glyph.innerHTML=icon(r.category);
     const text=node('span','transaction-text');text.append(node('strong',null,r.note||r.category),node('small',null,r.category+' · '+(r.paidBy==='other'?'Paid by '+r.person:(account(r.accountId)?displayAccountName(account(r.accountId)):'Unassigned'))));
-    row.append(glyph,text,node('strong','transaction-amount',(kind(r.category)==='income'?'+':'−')+money(r.amount)));row.onclick=()=>openEntry(r.id);recent.append(row);
+    row.append(glyph,text,node('strong','transaction-amount',(recordCredit(r)?'+':'−')+money(r.amount)));row.onclick=()=>openEntry(r.id);recent.append(row);
   }
   const query=($('expenseSearch')?.value||'').trim().toLowerCase();if(query)rows($('expenseRows'),list.filter(r=>kind(r.category)===expenseView&&(!categoryFilter||r.category===categoryFilter)&&[r.note,r.category,r.person,account(r.accountId)?.name].join(' ').toLowerCase().includes(query)));
   $('accountCount').textContent=state.accounts.length+' bank, cash and wallet accounts';
 }
 function drawHomeDonut(expenses){
-  const holder=$('homeDonut');holder.replaceChildren();const sums=new Map();for(const r of expenses)sums.set(r.category,(sums.get(r.category)||0)+cents(r.amount));
-  let values=[...sums].map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value),total=values.reduce((s,v)=>s+v.value,0);
+  const holder=$('homeDonut');holder.replaceChildren();const sums=new Map();for(const r of expenses)sums.set(r.category,(sums.get(r.category)||0)+reportCents(r));
+  let values=[...sums].map(([label,value])=>({label,value})).filter(v=>v.value>0).sort((a,b)=>b.value-a.value),total=values.reduce((s,v)=>s+v.value,0);
   if(values.length>4)values=[...values.slice(0,3),{label:'Other categories',value:values.slice(3).reduce((s,v)=>s+v.value,0)}];
   if(!total){holder.append(node('p','empty','Add your first expense to see where your money goes.'));return}
   const chart=node('div','donut'),legend=node('div','donut-legend');let offset=0;const segments=values.map((v,i)=>{const pct=v.value/total*100;const svg=`<circle cx="80" cy="80" r="61" pathLength="100" fill="none" stroke="${palette[i]}" stroke-width="19" stroke-dasharray="${Math.max(.05,pct-(values.length>1?.7:0))} ${100-Math.max(.05,pct-(values.length>1?.7:0))}" stroke-dashoffset="${-offset}" transform="rotate(-90 80 80)"/>`;offset+=pct;return svg}).join('');
@@ -117,3 +117,4 @@ function exportFinancialCsv(){
   for(const t of state.transfers.filter(t=>inRange(t.date,range)))data.push([t.date,'Transfer','transfer',t.amount/100,account(t.from).name,account(t.to).name,'','Me','','']);
   data.sort((a,b)=>a[0].localeCompare(b[0]));download('Salary-'+range.label.replace(/[^a-z0-9-]/gi,'_')+'.csv',csvText(['Date','Category','Type','Amount INR','Account','To account or person','Note','Paid by','Repayment needed','Expense ID'],data),'text/csv');
 }
+

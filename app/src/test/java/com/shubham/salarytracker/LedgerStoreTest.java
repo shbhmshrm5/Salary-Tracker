@@ -19,4 +19,11 @@ public class LedgerStoreTest {
  @Test public void storesMoreThanFiveMegabytesAndRejectsDuplicates() throws Exception{
   LedgerStore store=fresh();JSONObject data=empty();JSONArray rows=data.getJSONArray("records");String note=new String(new char[600]).replace('\0','x');for(int i=0;i<10000;i++)rows.put(new JSONObject().put("id","r"+i).put("amount",10).put("note",note));assertTrue(data.toString().length()>5000000);store.save(data.toString());store.close();store=new LedgerStore(RuntimeEnvironment.getApplication());assertEquals(10000,new JSONObject(store.load()).getJSONArray("records").length());rows.put(rows.getJSONObject(0));try{store.save(data.toString());fail("Duplicate IDs must be rejected");}catch(IllegalArgumentException expected){}assertEquals(10000,new JSONObject(store.load()).getJSONArray("records").length());store.close();
  }
+ @Test public void googleProfilesNeverShareLedgerRows() throws Exception {
+  android.content.Context context=RuntimeEnvironment.getApplication();
+  context.deleteDatabase("salary-alice.db");context.deleteDatabase("salary-bob.db");
+  LedgerStore device=fresh(), alice=new LedgerStore(context,"alice"),bob=new LedgerStore(context,"bob");
+  JSONObject data=empty().put("profile",new JSONObject().put("name","Alice"));data.getJSONArray("records").put(new JSONObject().put("id","only-alice").put("amount",100));
+  alice.save(data.toString());assertEquals("",bob.load());assertEquals("",device.load());alice.close();alice=new LedgerStore(context,"alice");assertEquals("Alice",new JSONObject(alice.load()).getJSONObject("profile").getString("name"));alice.close();bob.close();device.close();
+ }
 }

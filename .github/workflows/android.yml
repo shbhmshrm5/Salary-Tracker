@@ -35,6 +35,8 @@ jobs:
           if [ ! -f .signing/salary.keystore ]; then
             keytool -genkeypair -keystore .signing/salary.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Salary Tracker" -keyalg RSA -keysize 2048 -validity 10000
           fi
+      - name: Signing certificate for Google registration
+        run: keytool -list -v -keystore .signing/salary.keystore -storepass android -alias androiddebugkey
       - name: Check mobile screens
         run: |
           npm install --no-save playwright
@@ -45,6 +47,7 @@ jobs:
           node tests/v31.cjs
           node tests/v32.cjs
           node tests/v33.cjs
+          node tests/v34.cjs
       - name: Save screen previews
         if: always()
         uses: actions/upload-artifact@v4
