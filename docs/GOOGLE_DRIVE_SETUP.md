@@ -4,7 +4,7 @@ The APK implements Google account authorization through Google Play services Aut
 
 1. Create/select a Google Cloud project and enable Google Drive API.
 2. Configure Google Auth Platform consent (app name, support email, audience and requested scopes). For a testing project, add each tester's Google email.
-3. Create an Android OAuth client with package `com.shubham.salarytracker` and the SHA-1 fingerprint of the stable signing certificate. Obtain SHA-1 from the CI signing-certificate output or `keytool -list -v -keystore .signing/salary.keystore -alias androiddebugkey` on the signing machine.
+3. Create an Android OAuth client with package `com.shubham.salarytracker` and signing SHA-1 `DE:41:F5:E7:54:0C:88:FF:6D:95:13:99:08:3F:E4:44:0D:42:3C:D0` (verified from the existing signed APK; keep this certificate for updates). Obtain SHA-1 from the CI signing-certificate output or `keytool -list -v -keystore .signing/salary.keystore -alias androiddebugkey` on the signing machine.
 4. Scopes: `https://www.googleapis.com/auth/drive.appdata`, `https://www.googleapis.com/auth/userinfo.email`, `https://www.googleapis.com/auth/userinfo.profile`.
 5. Install the signed APK on a phone with Google Play services. Open Settings → Google Drive → Connect Google account. Verify the returned email before importing device-only records.
 6. Test: create a small entry, Back up now, then list backups. On another phone, connect the same account and explicitly restore that backup. Try a different Google account and verify it starts with separate empty records.

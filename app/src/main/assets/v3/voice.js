@@ -61,7 +61,7 @@ function voiceDate(t,base=today()){
 }
 function parseVoice(raw,accounts=state?.accounts||[],base=today()){
   const t=normalVoice(raw),warnings=[],result={amount:null,category:'Other',accountId:null,person:'',repayNeeded:false,note:'',...voiceDate(t,base),warnings};
-  if(/\b(?:transfer|transferred|delete|remove|repaid)\b|^(?:please\s+)?repay\b/.test(t)){result.unsupported=true;return result}
+  if(/\b(?:transfer|transferred|delete|remove|repaid|refund|refunded|borrow|borrowed|lent|lend)\b|\b(?:credit\s+)?card\s+(?:bill|payment|repayment)\b|^(?:please\s+)?repay\b/.test(t)){result.unsupported=true;return result}
   if(/\bleave\b|छुट्टी|chhutti/.test(t)){
     result.leave=true;const m=t.match(/(?:from\s+)?(\d{1,2})\s*(?:to|से|se|-)\s*(\d{1,2})\s+([a-z]+|[\u0900-\u097f]+)(?:\s+(\d{4}))?/);
     if(m){result.date=voiceDate(m[1]+' '+m[3]+' '+(m[4]||base.slice(0,4)),base).date;result.end=voiceDate(m[2]+' '+m[3]+' '+(m[4]||base.slice(0,4)),base).date}else{result.end=result.date;if(!result.explicit)result.date=result.end=''}return result;
@@ -80,7 +80,8 @@ function parseVoice(raw,accounts=state?.accounts||[],base=today()){
   const hasName=(text,name)=>(' '+normalVoice(text).replace(/[^a-z0-9\u0900-\u097f]+/g,' ')+' ').includes(' '+normalVoice(name).replace(/[^a-z0-9\u0900-\u097f]+/g,' ')+' ');
   const aliases={HDFC:['hdfc','एचडीएफसी'],SBI:['sbi','एसबीआई'],'Bank of Baroda':['bank of baroda','bob','बैंक ऑफ बड़ौदा'],'AU Small Finance Bank':['au bank','au small finance','एयू बैंक'],ICICI:['icici','आईसीआईसीआई'],Cash:['cash','नकद'],'Google Pay':['google pay','gpay','गूगल पे'],CRED:['cred'],PhonePe:['phonepe','फोनपे']};
   for(const bank of Object.keys(bankLogos))if(!aliases[bank])aliases[bank]=[bank];const mentioned=Object.keys(aliases).filter(k=>aliases[k].some(a=>hasName(t,a)));
-  const matches=accounts.filter(a=>!a.archived&&((a.name&&hasName(t,a.name))||mentioned.includes(a.bank)));
+  const creditMention=/\bcredit\s+card\b/.test(t),pool=accounts.filter(a=>!a.archived&&(!creditMention||isCard(a)));
+  const matches=pool.filter(a=>((a.name&&hasName(t,a.name))||mentioned.includes(a.bank))||(creditMention&&!mentioned.length&&pool.length===1));
   if(!result.person){if(matches.length===1)result.accountId=matches[0].id;else if(matches.length>1||mentioned.length||/\b(?:from|using|via|through|card|bank|wallet)\b/.test(t)){result.needsAccount=true;warnings.push('Choose the account: its name was missing or ambiguous.')}}
   if(!result.date)warnings.push('Choose the date; the spoken date was unclear.');
   if(result.person)warnings.push('Confirm who paid and whether repayment is needed.');
@@ -98,3 +99,4 @@ function reviewVoice(){
   else if(r.accountId)$('entryAccount').value=r.accountId;else if(r.needsAccount){const option=node('option',null,'Choose an account');option.value='';$('entryAccount').prepend(option);$('entryAccount').value=''}
   $('voiceEntryReview').classList.remove('hidden');$('voiceEntryReview').textContent='Voice draft — check every detail before saving. '+r.warnings.join(' ');
 }
+
