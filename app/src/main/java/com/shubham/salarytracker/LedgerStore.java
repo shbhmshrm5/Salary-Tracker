@@ -31,7 +31,7 @@ public class LedgerStore extends SQLiteOpenHelper {
   return state.toString();
  }
  public synchronized void save(String text) throws Exception {
-  JSONObject state=new JSONObject(text);if(state.getInt("version")!=3 && state.getInt("version")!=4 && state.getInt("version")!=5)throw new IllegalArgumentException("Unsupported data version");
+  JSONObject state=new JSONObject(text);if(state.getInt("version")!=3 && state.getInt("version")!=4 && state.getInt("version")!=5 && state.getInt("version")!=6)throw new IllegalArgumentException("Unsupported data version");
   // Parse all collections first. Any duplicate ID rejects the complete save.
   HashMap<String,HashMap<String,String>> incoming=new HashMap<>();
   for(String table:TABLES){JSONArray list=state.getJSONArray(table);HashMap<String,String> rows=new HashMap<>();for(int i=0;i<list.length();i++){JSONObject row=list.getJSONObject(i);String id=row.getString("id");if(id.isEmpty()||rows.put(id,row.toString())!=null)throw new IllegalArgumentException("Duplicate ID");}incoming.put(table,rows);}

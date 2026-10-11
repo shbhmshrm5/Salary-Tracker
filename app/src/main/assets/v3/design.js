@@ -51,6 +51,7 @@ function saveExpenseEntry(e){
   const old=state.records.find(r=>r.id===editing),accountId=other?null:$('entryAccount').value||null;
   if(!other&&!accountId&&!(old&&!old.accountId&&old.paidBy!=='other')){message('Choose an account in More → Accounts first');return}
   const r={...old,id:editing||uid(),createdAt:old?.createdAt||Date.now(),amount:amount/100,category,date,note:$('note').value.trim(),accountId,paidBy:other?'other':'me'};
+  if(typeof paymentDraftOrigin!=='undefined'&&paymentDraftOrigin&&!editing){r.paymentDraftId=paymentDraftOrigin.id;r.paymentReference=paymentDraftOrigin.reference||'';}
   if(other){r.person=canonicalPerson($('payerName').value);r.repayNeeded=$('repayNeeded').value==='yes';if(!r.person){message('Enter who paid');return}}
   if((old?.repayments||[]).length){
     if(!other||!r.repayNeeded){message('This expense has repayments. Keep Someone else and repayment enabled, or remove those repayments first.');return}
