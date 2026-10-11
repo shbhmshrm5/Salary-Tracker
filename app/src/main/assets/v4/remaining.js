@@ -39,7 +39,7 @@ function compactAccountActions(){
  for(const actions of document.querySelectorAll('#accountList .account-actions')){
   const buttons=[...actions.querySelectorAll(':scope > button')];if(buttons.length<3)continue;
   const more=node('details','account-menu');more.append(node('summary',null,'Manage'));
-  for(const b of buttons)if(!['History','Pay bill'].includes(b.textContent))more.append(b);
+  for(const b of buttons)if(!['History','Pay bill','Record bill payment'].includes(b.textContent))more.append(b);
   actions.append(more);
  }
 }

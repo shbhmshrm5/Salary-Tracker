@@ -7,6 +7,7 @@ function validateExtensions(d){
  const accounts=new Map(d.accounts.map(a=>[a.id,a])),records=new Map(d.records.map(r=>[r.id,r]));
  const safe=n=>Number.isSafeInteger(n)&&Math.abs(n)<=10000000000000;
  for(const a of d.accounts)if(isCard(a)&&(!safe(a.limit)||a.limit<=0||![a.statementDay,a.dueDay].every(x=>Number.isInteger(x)&&x>=1&&x<=31)))throw Error('Invalid card details');
+ for(const a of d.accounts)if(isCard(a)&&((a.last4!=null&&!/^(?:[0-9]{4})?$/.test(a.last4))||(a.network!=null&&!['','Visa','Mastercard','RuPay','Amex'].includes(a.network))))throw Error('Invalid card display details');
  const refunds=new Map();for(const r of d.records)if(r.refundOf){const original=records.get(r.refundOf);if(!original||original.refundOf||original.shared||original.paidBy==='other'||kind(original.category)!=='expense'||r.category!==original.category||r.date<original.date||r.paidBy==='other'||!accounts.has(r.accountId))throw Error('Invalid refund');refunds.set(original.id,(refunds.get(original.id)||0)+cents(r.amount));if(refunds.get(original.id)>cents(original.amount))throw Error('Refund exceeds purchase')}
  if(d.profile!=null&&(typeof d.profile.name!=='string'||d.profile.name.length>40))throw Error('Invalid profile');
  for(const key of ['budgets','schedules','adjustments','moneyMoves']){if(d[key]!=null&&!Array.isArray(d[key]))throw Error('Invalid collection');const ids=new Set();for(const x of d[key]||[]){if(!x.id||ids.has(x.id))throw Error('Duplicate ID');ids.add(x.id);if(!safe(x.amount)||(key==='adjustments'?x.amount===0:x.amount<=0))throw Error('Invalid amount');
