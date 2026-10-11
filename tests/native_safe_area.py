@@ -29,8 +29,13 @@ def tap_text(text):
             labels=[item.attrib.get('text',''),item.attrib.get('content-desc','')]
             if any(text==label.strip() for label in labels): candidates.insert(0,item)
             elif any(text in label for label in labels): candidates.append(item)
+        nav=next((n for n in nodes if 'Main navigation' in (n.attrib.get('text',''),n.attrib.get('content-desc',''))),None)
+        nav_top=bounds(nav)[1] if nav is not None else 100000
         for item in candidates:
             x1,y1,x2,y2=bounds(item)
+            # WebView exposes rows underneath the fixed navigation bar; scroll before tapping.
+            if text not in ['Home','Income','Expenses','Calendar','Settings'] and (y1+y2)//2>=nav_top:
+                continue
             if x2>x1 and y2>y1:
                 adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
                 time.sleep(2)
