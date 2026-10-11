@@ -8,4 +8,32 @@ body{font-size:14px}main{padding:22px 20px 164px;max-width:480px}header{display:
 @media(max-width:360px){main{padding-left:16px;padding-right:16px}header{gap:6px}h1{font-size:20px}.period-button{font-size:10px;padding:7px}.spending-card{padding:12px}#homeDonut{gap:6px}.donut-item{gap:4px}.donut-item>strong,.donut-label>span{font-size:10px}#homeAccounts .account-tile{flex-basis:48%;padding:12px}#homeAccounts .account-tile>strong{font-size:19px}.theme-choice{padding:6px}}
 .voice-mic{pointer-events:auto;margin-left:10px;width:46px;height:46px;min-height:46px;border-radius:50%;padding:12px;background:var(--tint);color:var(--accent);border:1px solid var(--border)}.voice-mic .icon{width:21px;height:21px}.voice-entry-button{display:flex;align-items:center;gap:8px;background:transparent;color:var(--accent);font-size:12px;padding:6px 0;min-height:40px;margin-bottom:10px}.voice-entry-button .icon{width:18px;height:18px}#voiceText{width:100%;resize:vertical;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:12px;padding:12px;font:14px system-ui;min-height:94px}#voiceEntryReview{padding:12px;background:var(--tint);border-radius:10px;line-height:1.6}#voiceDialog .primary{margin-top:10px}
 
-html[data-theme=amoled] .period-button,html[data-theme=amoled] .voice-mic{background:#151f30;color:#a9caff;border-color:#272b32}
+/* Quiet daily views: one secondary action menu, grouped settings. */
+#more>.settings-row{margin:16px 0 22px}
+.settings-group{padding:0;border-radius:16px;margin:12px 0;overflow:hidden}
+.settings-group>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:18px;color:var(--ink);font-size:15px;font-weight:600;min-height:76px}
+.settings-group>summary::-webkit-details-marker{display:none}
+.settings-group>summary::after{content:'+';font-size:21px;color:var(--muted);margin-left:10px}
+.settings-group[open]>summary::after{content:'−'}
+.settings-group summary small{display:block;font-size:12px;font-weight:400;margin-top:4px}
+.settings-group>.settings-row{margin:0;border:0;border-top:1px solid var(--border);border-radius:0;padding:16px 18px;background:transparent}
+.settings-group>.card,.settings-group>details{margin:12px;border-radius:12px}
+#more>.notice:last-child{margin:26px 4px;color:var(--muted);font-size:11px}
+.transaction-menu,.account-menu{margin:0;padding:0;border:0;background:transparent;text-align:right}
+.transaction-menu>summary,.account-menu>summary{padding:10px 8px;min-height:44px;font-size:12px;list-style:none;color:var(--accent)}
+.transaction-menu>button,.account-menu>button{display:block!important;width:100%;min-height:44px!important;text-align:right;font-size:12px!important;padding:10px!important}
+.row>div:last-child{flex-shrink:0;max-width:42%}
+.row>div:last-child>button{min-height:44px;font-size:12px}
+.row .transaction-amount{white-space:nowrap}
+.home-updates{width:100%;margin:0;padding:12px 14px;background:var(--surface);border-radius:12px}
+.home-updates>summary{font-size:12px;min-height:24px}
+.home-updates>.link-button{display:block;width:100%;text-align:left;min-height:44px}
+#featureReminder:empty{display:none!important}
+#home .quick-actions{gap:12px;margin:14px 0 22px}
+#home .quick-actions button{background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:12px;padding:10px}
+#workflowDialog>.link-button{display:block;width:100%;text-align:left;min-height:48px;border-bottom:1px solid var(--border);border-radius:0}
+#workflowDialog>details>.link-button{display:block;width:100%;text-align:left;min-height:48px}
+
+.row>div:last-child{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;column-gap:4px}
+.row>div:last-child>.transaction-amount{width:100%;margin-bottom:2px}
+.transaction-menu[open]{width:100%}

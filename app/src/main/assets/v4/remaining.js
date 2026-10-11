@@ -3,13 +3,15 @@ function reimbursementOwed(r,asof=today()){return r.shared&&r.date<=asof?Math.ma
 function initRemaining(){
  $('more').prepend(settingsAction('Payment inbox','Review captured payments before saving',openPaymentInbox),settingsAction('Reimbursements','Your share, money owed to you and collections',openReimbursements));
  const oldRows=rows;rows=function(el,list){oldRows(el,list);[...el.querySelectorAll('.row')].forEach((row,i)=>{const r=list[i];if(r&&!r.refundOf&&r.paidBy!=='other'&&kind(r.category)==='expense'){row.lastElementChild.append(action(r.shared?'Reimbursement':'Someone owes me',()=>openSharedExpense(r.id)));if(r.shared){row.querySelector('.transaction-text').append(node('div','muted','My share '+money((cents(r.amount)-r.shared.amount)/100)+' · '+money(reimbursementOwed(r)/100)+' to receive'));const del=[...row.querySelectorAll('button')].find(x=>x.textContent==='Delete');if(del)del.onclick=()=>{if(confirm('Delete this shared expense and reverse '+money((r.shared.collections||[]).reduce((s,x)=>s+x.amount,0)/100)+' of collected reimbursements?')&&update({records:state.records.filter(x=>x.id!==r.id)}))render()}}}})};
+ const expandedRows=rows;rows=function(el,list){expandedRows(el,list);compactTransactionActions(el)};
  const originalSplit=openSplit;openSplit=function(id){if(state.records.find(r=>r.id===id)?.shared){message('Remove the reimbursement allocation before splitting categories.');return}return originalSplit(id)};
  const originalRefund=openRefund;openRefund=function(id,...args){if(state.records.find(r=>r.id===id)?.shared){message('Remove the reimbursement allocation and reverse collections before recording a purchase refund.');return}return originalRefund(id,...args)};
  const originalOpen=openEntry;openEntry=function(...args){paymentDraftOrigin=null;return originalOpen(...args)};
  const save=$('form').onsubmit;$('form').onsubmit=e=>{const origin=paymentDraftOrigin;save(e);if(origin&&state.records.some(r=>r.paymentDraftId===origin.id)){if(window.Android?.dismissPaymentDraft)Android.dismissPaymentDraft(origin.id);paymentDraftOrigin=null}};
  const originalHistory=historyItems;historyItems=function(id){const list=originalHistory(id);for(const r of state.records)for(const c of r.shared?.collections||[])if(!id||id===c.accountId)list.push({date:c.date,title:'Reimbursement from '+r.shared.person,detail:r.note||r.category,amount:c.amount/100,sign:'+',open:()=>openSharedExpense(r.id)});return list.sort((a,b)=>b.date.localeCompare(a.date))};
- const originalRender=renderComprehensive;renderComprehensive=function(){originalRender();const total=state.records.reduce((s,r)=>s+reimbursementOwed(r),0);if(total)$('featureReminder').append(action(money(total/100)+' to receive',openReimbursements));let count=0;try{count=JSON.parse(window.Android?.paymentDrafts?Android.paymentDrafts():'[]').length}catch{}if(count)$('featureReminder').append(action(count+' payment drafts',openPaymentInbox));};
+ const originalRender=renderComprehensive;renderComprehensive=function(){originalRender();const total=state.records.reduce((s,r)=>s+reimbursementOwed(r),0);if(total)$('featureReminder').append(action(money(total/100)+' to receive',openReimbursements));let count=0;try{count=JSON.parse(window.Android?.paymentDrafts?Android.paymentDrafts():'[]').length}catch{}if(count)$('featureReminder').append(action(count+' payment drafts',openPaymentInbox));compactAccountActions();compactHomeReminders();};
  const oldResume=window.onAppResume;window.onAppResume=function(){oldResume?.();checkIncomingSync();if(state)render()};setInterval(checkIncomingSync,10000);setTimeout(checkIncomingSync,1000);
+ organiseSettings();
  window.onSharedPayment=text=>{const {d,f}=featureForm('Shared payment text','Check the receipt text, then review the amount, category, date and account. Nothing is saved automatically.');const input=field(f,'Payment text','text',String(text).slice(0,500));submitButton(f,'Review draft',()=>{d.close();openVoice(false);$('voiceText').value=input.value;reviewVoice()})};
 }
 function openSharedExpense(id){const r=state.records.find(r=>r.id===id);if(!r)return;const {d,f}=featureForm('Expense reimbursement','Original payment '+money(r.amount)+'. The portion owed by someone else is excluded from your personal spending. Collections increase your account balance; they are not income.');const person=field(f,'Who owes you?','text',r.shared?.person||''),amount=field(f,'Their share (₹)','number',(r.shared?.amount||0)/100);person.maxLength=40;amount.min='.01';amount.max=r.amount;submitButton(f,'Save allocation',()=>{if(state.records.some(x=>x.refundOf===id))throw Error('Remove purchase refunds before allocating a reimbursement.');const n=amountValue(amount),shared={person:canonicalPerson(person.value),amount:n,collections:r.shared?.collections||[]};if(n>cents(r.amount))throw Error('Their share cannot exceed the original expense.');if(update({records:state.records.map(x=>x.id===id?{...x,shared}:x)})){d.close();render();openSharedExpense(id)}});
@@ -21,3 +23,41 @@ function openPaymentSettings(){const d=workflowDialog('Payment notification acce
 function openPaymentInbox(){const d=workflowDialog('Payment inbox');d.append(action('Notification settings',openPaymentSettings),action('Paste a receipt',openPaymentText));const drafts=window.Android?.paymentDrafts?JSON.parse(Android.paymentDrafts()):[];if(!drafts.length)d.append(node('p','empty','No payment drafts. Enable access for your payment app, or share/paste a text receipt.'));for(const x of drafts){const card=node('div','card'),date=new Date(x.time).toLocaleString('en-IN');const possible=state.records.some(r=>(x.reference&&r.paymentReference===x.reference)||r.date===localDay(x.time)&&cents(r.amount)===x.amount)||drafts.some(y=>y.id!==x.id&&y.amount===x.amount&&Math.abs(y.time-x.time)<300000);card.append(node('strong',null,x.source+' · '+(x.amount?money(x.amount/100):'Check amount')),node('p','notice',date+(possible?' · Possible duplicate—review carefully':'')),node('p','notice',x.text),action('Review',()=>reviewPaymentDraft(x)),action('Dismiss',()=>{if(Android.dismissPaymentDraft(x.id))openPaymentInbox()}));d.append(card)}}
 function localDay(time){const d=new Date(time);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function reviewPaymentDraft(x){if(x.special){const d=workflowDialog('Review '+x.special);d.append(node('p','notice',x.text),node('p','notice','This appears to be a '+x.special+'. Use the matching workflow so it is not counted as a new expense.'),action(x.special==='refund'?'Open expense history':x.special==='card payment'?'Pay a credit-card bill':'Transfer between accounts',()=>{d.close();if(x.special==='refund'){show('expenses')}else if(x.special==='card payment'){openCards()}else{openTransfer()}}),action('Dismiss notification draft',()=>{Android.dismissPaymentDraft(x.id);openPaymentInbox()}));return}if(state.records.some(r=>r.paymentDraftId===x.id||x.reference&&r.paymentReference===x.reference)){message('This payment reference was already saved. Dismiss the duplicate.');return}closeDialogs();openEntry(null,x.income?'Other income':'Other');if(page!=='entry')return;$('amount').value=x.amount?x.amount/100:'';$('date').value=localDay(x.time);$('note').value='';const choice=node('option',null,'Choose the actual bank / card / wallet');choice.value='';$('entryAccount').prepend(choice);$('entryAccount').value='';paymentDraftOrigin=x;$('entryAccountHint').textContent='Check the source account. Google Pay / PhonePe usually pays from your bank, not a separate wallet. For transfers or card bills, use Transfer rather than an expense or income. Notification: '+x.text;entrySnapshot=formSnapshot()}
+
+// Keep daily screens quiet while retaining every existing action and its validation.
+function compactTransactionActions(el){
+ for(const row of el.querySelectorAll('.row')){
+  const side=row.lastElementChild,buttons=[...side.querySelectorAll(':scope > button')];
+  if(buttons.length<2)continue;
+  const more=node('details','transaction-menu'),summary=node('summary',null,'More');
+  summary.setAttribute('aria-label','More actions for '+row.querySelector('.transaction-text strong').textContent);
+  more.append(summary);for(const b of buttons)if(b.textContent!=='Edit')more.append(b);
+  side.append(more);
+ }
+}
+function compactAccountActions(){
+ for(const actions of document.querySelectorAll('#accountList .account-actions')){
+  const buttons=[...actions.querySelectorAll(':scope > button')];if(buttons.length<3)continue;
+  const more=node('details','account-menu');more.append(node('summary',null,'Manage'));
+  for(const b of buttons)if(!['History','Pay bill'].includes(b.textContent))more.append(b);
+  actions.append(more);
+ }
+}
+function compactHomeReminders(){
+ const box=$('featureReminder');if(!box.children.length)return;
+ const items=[...box.children],group=node('details','home-updates'),summary=node('summary',null,'Account updates · '+items.length);
+ group.append(summary,...items);box.replaceChildren(group);
+}
+function organiseSettings(){
+ const page=$('more'),children=[...page.children];
+ const groups=[['Accounts & payments','Banks, cards, transfers and people'],['Planning & reports','Budgets, recurring entries and insights'],['Appearance & preferences','Theme, default account and categories'],['Backup & data','Save, restore and import your records'],['Privacy','Phone screen lock']];
+ const panels=groups.map(([title,sub])=>{const d=node('details','settings-group'),s=node('summary'),label=node('span',null,title);label.append(node('small',null,sub));s.append(label);d.append(s);return d});
+ const titleOf=e=>e.querySelector('h2')?.textContent||e.querySelector('summary')?.textContent||e.querySelector('span')?.firstChild?.textContent||e.textContent;
+ const map={'Accounts & wallets':0,'Credit cards':0,'Paid by others':0,'Reimbursements':0,'Lending & borrowing':0,'Payment inbox':0,'Budgets':1,'Recurring entries':1,'Insights & reports':1,'Leave calendar':1,'Default spending account':2,'Appearance':2,'Voice entry':2,'Built-in categories':2,'Google Drive':3,'Backup & export':3,'Import & assisted entry':3,'Privacy & lock':4};
+ let profile=null;const rest=[];
+ for(const el of children){const title=titleOf(el).trim();if(title==='Your profile'){profile=el;continue}if(title==='Leave calendar')continue;const i=map[title];if(i!==undefined)panels[i].append(el);else rest.push(el)}
+ page.replaceChildren();if(profile)page.append(profile);page.append(...panels,...rest);
+ panels[0].insertBefore(settingsAction('Transfer money','Move money between your accounts',()=>openTransfer()),panels[0].children[1]||null);
+ const intro=node('p','notice','Personalise your app and manage your records.');page.prepend(intro);
+ for(const d of panels)d.addEventListener('toggle',()=>{if(d.open)for(const other of panels)if(other!==d)other.open=false});
+}
