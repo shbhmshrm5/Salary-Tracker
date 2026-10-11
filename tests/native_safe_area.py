@@ -66,6 +66,7 @@ try:
     time.sleep(2)
     verify('back-from-calendar')
     tap_text('Settings')
+    tap_text('Appearance & preferences')
     tap_text('AMOLED black')
     tap_text('Home')
     verify('amoled-home')
@@ -78,3 +79,4 @@ if overlay in adb('shell','cmd','overlay','list'):
     time.sleep(3)
     verify('tall-cutout')
     adb('shell','cmd','overlay','disable',overlay)
+
