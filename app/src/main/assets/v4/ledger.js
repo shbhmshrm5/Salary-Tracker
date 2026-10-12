@@ -4,6 +4,8 @@ function recordCredit(r){return !!r.refundOf||kind(r.category)==='income'}
 function isCard(a){return a?.type==='credit'}
 function extensionBalance(a,date){return state.records.flatMap(r=>r.shared?.collections||[]).filter(x=>x.accountId===a.id&&x.date>=a.date&&x.date<=date).reduce((s,x)=>s+x.amount,0)+(state.adjustments||[]).filter(x=>x.accountId===a.id&&x.date>=a.date&&x.date<=date).reduce((s,x)=>s+x.amount,0)+(state.moneyMoves||[]).filter(x=>x.accountId===a.id&&x.date>=a.date&&x.date<=date).reduce((s,x)=>s+(['borrow','receive'].includes(x.kind)?x.amount:-x.amount),0)}
 function validateExtensions(d){
+ if(d.savingsGoal!=null){const g=d.savingsGoal;if(typeof g.name!=='string'||!g.name.trim()||g.name.length>60||!Number.isSafeInteger(g.target)||g.target<=0||g.target>10000000000000||!Number.isSafeInteger(g.saved)||g.saved<0||g.saved>10000000000000)throw Error('Invalid savings goal')}
+ if(d.uiPreferences!=null&&(!d.uiPreferences||typeof d.uiPreferences!=='object'||!['compact','comfortable','large'].includes(d.uiPreferences.textSize)))throw Error('Invalid text size');
  const accounts=new Map(d.accounts.map(a=>[a.id,a])),records=new Map(d.records.map(r=>[r.id,r]));
  const safe=n=>Number.isSafeInteger(n)&&Math.abs(n)<=10000000000000;
  for(const a of d.accounts)if(isCard(a)&&(!safe(a.limit)||a.limit<=0||![a.statementDay,a.dueDay].every(x=>Number.isInteger(x)&&x>=1&&x<=31)))throw Error('Invalid card details');
