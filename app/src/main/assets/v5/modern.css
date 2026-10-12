@@ -28,3 +28,5 @@ body.entry-focus header{display:flex}body.entry-focus header>div{flex:1}body.ent
 #entry .type-switch{margin:8px 0 16px}#entry .entry-panel{padding:12px 16px}#entry .entry-panel label{text-align:left}#entry input.amount{text-align:left}
 #entry .category-tools{margin-top:3px}#entry #voiceEntryReview:empty{display:none}
 #moreCategories.hidden{display:none!important}
+
+.setting-icon{color:var(--accent-text)}
