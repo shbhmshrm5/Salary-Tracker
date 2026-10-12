@@ -21,9 +21,9 @@ input,select,textarea{border-radius:12px;min-height:48px;font-size:16px}button{b
 #entry .form-actions{gap:10px;margin-top:24px}.form-actions .primary{border-radius:14px}
 @media(max-width:360px){#categories{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding-left:14px;padding-right:14px}}
 
-#entryTitle{display:none}body.entry-focus header{margin-bottom:8px}body.entry-focus nav{display:none}body.entry-focus .header-settings{display:none}
+#entryTitle{display:none}body.entry-focus header{margin-bottom:8px}body.entry-focus .header-settings{display:none}
 body.entry-focus #settingsPageBack{background:transparent;color:var(--accent);font-size:28px;padding:0;min-width:44px}
-body.entry-focus header{display:flex}body.entry-focus header>div{flex:1}body.entry-focus main{padding-bottom:36px}
+body.entry-focus header{display:flex}body.entry-focus header>div{flex:1}body.entry-focus main{padding-bottom:164px}
 #categories{display:block}#categories select{margin:0;width:100%}
 #entry .type-switch{margin:8px 0 16px}#entry .entry-panel{padding:12px 16px}#entry .entry-panel label{text-align:left}#entry input.amount{text-align:left}
 #entry .category-tools{margin-top:3px}#entry #voiceEntryReview:empty{display:none}
