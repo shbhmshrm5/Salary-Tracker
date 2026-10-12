@@ -50,7 +50,7 @@ function saveExpenseEntry(e){
   if(!Number.isSafeInteger(amount)||amount<=0||!validDate(date))return;
   const old=state.records.find(r=>r.id===editing),accountId=other?null:$('entryAccount').value||null;
   if(!other&&!accountId&&!(old&&!old.accountId&&old.paidBy!=='other')){message('Choose an account in More → Accounts first');return}
-  const r={...old,id:editing||uid(),createdAt:old?.createdAt||Date.now(),amount:amount/100,category,date,note:$('note').value.trim(),accountId,paidBy:other?'other':'me'};
+  const r={...old,id:editing||uid(),createdAt:old?.createdAt||Date.now(),amount:amount/100,category,subcategory:$('entrySubcategory')?.value||'',date,note:$('note').value.trim(),accountId,paidBy:other?'other':'me'};
   if(typeof paymentDraftOrigin!=='undefined'&&paymentDraftOrigin&&!editing){r.paymentDraftId=paymentDraftOrigin.id;r.paymentReference=paymentDraftOrigin.reference||'';}
   if(other){r.person=canonicalPerson($('payerName').value);r.repayNeeded=$('repayNeeded').value==='yes';if(!r.person){message('Enter who paid');return}}
   if((old?.repayments||[]).length){
@@ -75,10 +75,10 @@ function renderDesign(list){
   const recent=$('recentRows');recent.replaceChildren();if(!list.length)recent.append(node('p','empty','Your recent entries will appear here.'));
   for(const r of list.slice(0,3)){
     const row=node('button','recent-row');row.type='button';const glyph=node('span','transaction-icon');glyph.innerHTML=icon(r.category);
-    const text=node('span','transaction-text');text.append(node('strong',null,r.note||r.category),node('small',null,r.category+' · '+(r.paidBy==='other'?'Paid by '+r.person:(account(r.accountId)?displayAccountName(account(r.accountId)):'Unassigned'))));
+    const text=node('span','transaction-text');text.append(node('strong',null,r.note||r.category),node('small',null,categoryLabel(r)+' · '+(r.paidBy==='other'?'Paid by '+r.person:(account(r.accountId)?displayAccountName(account(r.accountId)):'Unassigned'))));
     row.append(glyph,text,node('strong','transaction-amount',(recordCredit(r)?'+':'−')+money(r.amount)));row.onclick=()=>openEntry(r.id);recent.append(row);
   }
-  const query=($('expenseSearch')?.value||'').trim().toLowerCase();if(query)rows($('expenseRows'),list.filter(r=>kind(r.category)===expenseView&&(!categoryFilter||r.category===categoryFilter)&&[r.note,r.category,r.person,account(r.accountId)?.name].join(' ').toLowerCase().includes(query)));
+  const query=($('expenseSearch')?.value||'').trim().toLowerCase();if(query)rows($('expenseRows'),list.filter(r=>kind(r.category)===expenseView&&(!categoryFilter||r.category===categoryFilter)&&[r.note,r.category,r.subcategory,r.person,account(r.accountId)?.name].join(' ').toLowerCase().includes(query)));
   $('accountCount').textContent=state.accounts.length+' bank, cash and wallet accounts';
 }
 function drawHomeDonut(expenses){

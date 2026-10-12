@@ -6,7 +6,7 @@ function validatePayers(d) {
   for (const r of d.records) {
     if (r.paidBy != null && !['me','other'].includes(r.paidBy)) throw Error('Invalid payer');
     const other = r.paidBy === 'other';
-    if (other && (kind(r.category) !== 'expense' || r.accountId != null || typeof r.person !== 'string' || !r.person.trim() || r.person.length > 40 || typeof r.repayNeeded !== 'boolean')) throw Error('Invalid outside payment');
+    if (other && (kind(r.category,d) !== 'expense' || r.accountId != null || typeof r.person !== 'string' || !r.person.trim() || r.person.length > 40 || typeof r.repayNeeded !== 'boolean')) throw Error('Invalid outside payment');
     if (r.repayments != null && !Array.isArray(r.repayments)) throw Error('Invalid repayments');
     let paid = 0;
     for (const p of r.repayments || []) {

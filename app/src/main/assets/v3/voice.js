@@ -78,6 +78,8 @@ function parseVoice(raw,accounts=state?.accounts||[],base=today()){
   const named=t.match(/paid by ([a-z]+(?: [a-z]+)?)(?=\s+(?:for|on|₹|\d)|$)/);if(!income&&named)result.person=named[1].replace(/\b\w/g,c=>c.toUpperCase());
   result.repayNeeded=!!result.person&&/repay|owe|return|वापस|लौटा|उधार/.test(t)&&!/no repayment|dont(?: need to| have to)? repay|do not(?: need to| have to)? repay|not owed|gift|वापस नहीं/.test(t);
   const hasName=(text,name)=>(' '+normalVoice(text).replace(/[^a-z0-9\u0900-\u097f]+/g,' ')+' ').includes(' '+normalVoice(name).replace(/[^a-z0-9\u0900-\u097f]+/g,' ')+' ');
+  const customMatches=(state?.categoryDefinitions||[]).filter(c=>kind(c.name)===(income?'income':'expense')&&hasName(t,c.name));
+  if(customMatches.length===1){result.category=customMatches[0].name;const children=customMatches[0].subcategories.filter(s=>hasName(t,s));if(children.length===1)result.subcategory=children[0];}
   const aliases={HDFC:['hdfc','एचडीएफसी'],SBI:['sbi','एसबीआई'],'Bank of Baroda':['bank of baroda','bob','बैंक ऑफ बड़ौदा'],'AU Small Finance Bank':['au bank','au small finance','एयू बैंक'],ICICI:['icici','आईसीआईसीआई'],Cash:['cash','नकद'],'Google Pay':['google pay','gpay','गूगल पे'],CRED:['cred'],PhonePe:['phonepe','फोनपे']};
   for(const bank of Object.keys(bankLogos))if(!aliases[bank])aliases[bank]=[bank];const mentioned=Object.keys(aliases).filter(k=>aliases[k].some(a=>hasName(t,a)));
   const creditMention=/\bcredit\s+card\b/.test(t),pool=accounts.filter(a=>!a.archived&&(!creditMention||isCard(a)));
@@ -94,7 +96,7 @@ function reviewVoice(){
   if(entryPages.includes(page)&&formSnapshot()!==entrySnapshot&&!confirm('Replace this unsaved draft with the voice entry?'))return;
   $('voiceDialog').close();
   if(r.leave){openLeave(null,r.date||today());$('leaveDate').value=r.date;$('leaveEnd').value=r.end||'';rangeEndEdited=true;previewLeaveRange();$('leaveReason').value='';$('leaveStatus').value=(r.end||r.date)>today()?'planned':'taken';message('Review leave dates and add a reason, then save.');return}
-  openEntry(null,r.category);$('amount').value=r.amount||'';$('date').value=r.date;$('note').value=r.note;voiceDateChosen=r.explicit;
+  openEntry(null,r.category);if(r.subcategory)$('entrySubcategory').value=r.subcategory;$('amount').value=r.amount||'';$('date').value=r.date;$('note').value=r.note;voiceDateChosen=r.explicit;
   if(r.person){$('paidBy').value='other';$('payerName').value=r.person;$('repayNeeded').value=r.repayNeeded?'yes':'no';syncPayer()}
   else if(r.accountId)$('entryAccount').value=r.accountId;else if(r.needsAccount){const option=node('option',null,'Choose an account');option.value='';$('entryAccount').prepend(option);$('entryAccount').value=''}
   $('voiceEntryReview').classList.remove('hidden');$('voiceEntryReview').textContent='Voice draft — check every detail before saving. '+r.warnings.join(' ');
