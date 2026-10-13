@@ -18,6 +18,7 @@ function v7Home(list){
  const liquid=state.accounts.filter(a=>!a.archived&&!isCard(a)),sum=arr=>arr.reduce((n,a)=>n+cents(balance(a)),0)/100;
  $('left').textContent=money(sum(liquid));const wallet=a=>['Google Pay','CRED','PhonePe','Other wallet'].includes(a.bank);const groups=[['Bank accounts',liquid.filter(a=>a.bank!=='Cash'&&!wallet(a))],['Wallets',liquid.filter(wallet)],['Cash',liquid.filter(a=>a.bank==='Cash')],['Credit cards',state.accounts.filter(a=>!a.archived&&isCard(a))]];
  const stack=$('homeAccounts');stack.replaceChildren();for(const [label,arr] of groups){const value=label==='Credit cards'?arr.reduce((n,a)=>n+Math.max(0,-cents(balance(a))),0)/100:sum(arr),b=action('',()=>{if(label==='Credit cards'){salaryPanel='cards';show('income')}else{v7AccountType=label;show('accounts')}});b.className='v7-money-cell';const glyph=node('span','v7-money-icon');glyph.innerHTML=icon(label==='Bank accounts'?'accounts':label==='Wallets'?'wallet':label==='Cash'?'income':'Bills');b.append(glyph,node('span','v7-money-label',label),node('strong',null,money(value)));if(label==='Credit cards')b.append(node('small','v7-owed','owed'));stack.append(b)}
+ v7RecentHome(list);
  const chart=$('homeDonut');modernRing(chart,state.records.filter(r=>inRange(r.date,reportRange())&&kind(r.category)==='expense'));chart.querySelector('h2')?.remove();const head=$('home').querySelector('.spending-card>h2');if(head)head.textContent='Spending · '+reportRange().label;
 }
 let v7AccountType='';
@@ -67,7 +68,7 @@ function initV7(){
  const previousPaymentReview=reviewPaymentDraft;reviewPaymentDraft=function(...args){const result=previousPaymentReview(...args);if(page==='entry')v7UpdateSave();return result};
  v7InvestmentForm();$('form').onsubmit=v7SaveEntry;$('form').addEventListener('input',v7UpdateSave);$('form').addEventListener('change',v7UpdateSave);$('amount').before(node('span','v7-rupee','₹'));
  const defaults=['Interest','Gift'].filter(c=>!categoryNames(state).some(x=>x.toLowerCase()===c.toLowerCase()));if(defaults.length)update({categoryDefinitions:[...(state.categoryDefinitions||[]),...defaults.map(name=>({name,kind:'income',subcategories:[]}))]});
- const priorRender=render;render=function(){priorRender();if(!state)return;v7Home(modernRecords());v7Salary();v7Spend();v7Calendar();v7Accounts();if(page==='invest')v7Invest()};
+ const priorRender=render;render=function(){if(state)v7ApplyAccent();priorRender();if(!state)return;v7Home(modernRecords());v7Salary();v7Spend();v7Calendar();v7Accounts();if(page==='invest')v7Invest()};
  const priorShow=show;show=function(...args){const result=priorShow(...args);if(page!=='accounts')v7AccountType='';return result};
  const priorHeader=modernHeaderAdd;modernHeaderAdd=function(){if(page==='expenses')openEntry();else if(page==='income'&&salaryPanel==='salary')openEntry(null,'Salary');else priorHeader()};$('modernHeaderAdd').onclick=modernHeaderAdd;
  // Keep the user's selected appearance. Fresh installs use the soft Google-inspired light style.
@@ -75,3 +76,15 @@ function initV7(){
  render();
 }
 function v7UpdateSave(){const amount=Number($('amount').value),other=kind(category)==='expense'&&$('paidBy').value==='other';$('saveEntry').disabled=!(Number.isFinite(amount)&&amount>0&&validDate($('date').value)&&(other?!!$('payerName').value.trim():!!$('entryAccount').value)&&(kind(category)!=='aside'||!!($('v7AMC').value.trim()&&$('v7Scheme').value.trim()&&$('v7InvestCategory').value.trim())))}
+
+const v7Accents={mint:{label:'Mint',color:'#8DE8C1',tint:'#102A20',palette:['#8DE8C1','#61B795','#397F64','#244D3E']},blue:{label:'Ice Blue',color:'#A8CDFF',tint:'#14243B',palette:['#A8CDFF','#729FD9','#466E9F','#294567']},lilac:{label:'Lilac',color:'#D3B8FF',tint:'#281B3C',palette:['#D3B8FF','#AE8DD8','#795D9C','#4B3962']}};
+function v7ApplyAccent(){const root=document.documentElement,key=state.uiPreferences?.amoledAccent||'mint',a=v7Accents[key]||v7Accents.mint;root.dataset.amoledAccent=key;root.style.setProperty('--amoled-accent',a.color);root.style.setProperty('--amoled-tint',a.tint);if(root.dataset.theme==='amoled')palette=a.palette}
+function v7RecentHome(list){
+ let wrap=$('v7HomeRecent');if(!wrap){wrap=node('div');wrap.id='v7HomeRecent';$('home').append(wrap)}wrap.replaceChildren();
+ const head=node('div','v7-recent-head');head.append(node('h2',null,'Recent entries'),action('View all',()=>v7AllEntries()));wrap.append(head);
+ const holder=node('div');wrap.append(holder);v7CompactEntries(holder,list.slice(0,3));
+}
+function v7CompactEntries(holder,list){if(!list.length){holder.append(node('p','empty','No entries in this period.'));return}for(const r of list){const b=action('',()=>openEntry(r.id));b.className='recent-row';const glyph=node('span','transaction-icon');glyph.innerHTML=icon(r.category);const text=node('span','transaction-text');text.append(node('strong',null,r.note||r.category),node('small',null,categoryLabel(r)+' · '+displayDate(r.date)));const amount=node('strong','transaction-amount',(recordCredit(r)?'+':'−')+money(r.amount));amount.style.color=recordCredit(r)?'var(--income-color)':kind(r.category)==='aside'?'var(--save-color)':'var(--ink)';b.append(glyph,text,amount);holder.append(b)}}
+function v7AllEntries(){const d=workflowDialog('All entries'),holder=node('div');d.append(node('p','muted',reportRange().label),holder);v7CompactEntries(holder,modernRecords());for(const b of holder.querySelectorAll('button')){const click=b.onclick;b.onclick=()=>{d.close();click()}}}
+const v7OriginalAppearance=modernAppearance;
+modernAppearance=function(){v7OriginalAppearance();const d=[...document.querySelectorAll('dialog[open]')].at(-1);if(!d||document.documentElement.dataset.theme!=='amoled')return;const section=node('div','v7-accent-section');section.append(node('h3',null,'AMOLED accent'));const choices=node('div','v7-accent-choices');section.append(choices);for(const [key,a] of Object.entries(v7Accents)){const b=action('',()=>{if(update({uiPreferences:{textSize:'comfortable',...state.uiPreferences,amoledAccent:key}})){render();modernAppearance()}});b.className='v7-accent-choice';b.setAttribute('aria-pressed',String((state.uiPreferences?.amoledAccent||'mint')===key));const swatch=node('span','v7-accent-swatch');swatch.style.background=a.color;b.append(swatch,node('span',null,a.label));choices.append(b)}const heading=[...d.querySelectorAll('h3')].find(h=>h.textContent==='Text size');if(heading)heading.before(section);else d.append(section)};

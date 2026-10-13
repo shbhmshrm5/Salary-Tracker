@@ -6,6 +6,7 @@ function extensionBalance(a,date){return state.records.flatMap(r=>r.shared?.coll
 function validateExtensions(d){
  if(d.savingsGoal!=null){const g=d.savingsGoal;if(typeof g.name!=='string'||!g.name.trim()||g.name.length>60||!Number.isSafeInteger(g.target)||g.target<=0||g.target>10000000000000||!Number.isSafeInteger(g.saved)||g.saved<0||g.saved>10000000000000)throw Error('Invalid savings goal')}
  if(d.uiPreferences!=null&&(!d.uiPreferences||typeof d.uiPreferences!=='object'||!['compact','comfortable','large'].includes(d.uiPreferences.textSize)))throw Error('Invalid text size');
+ if(d.uiPreferences?.amoledAccent!=null&&!['mint','blue','lilac'].includes(d.uiPreferences.amoledAccent))throw Error('Invalid AMOLED accent');
  const accounts=new Map(d.accounts.map(a=>[a.id,a])),records=new Map(d.records.map(r=>[r.id,r]));
  for(const r of d.records)if(r.investment!=null){const x=r.investment,valid=s=>typeof s==='string'&&s.trim()===s&&s.length>0&&s.length<=60&&!/[\u0000-\u001f\u007f]/.test(s);if(kind(r.category,d)!=='aside'||!x||!valid(x.amc)||!valid(x.scheme)||!valid(x.group))throw Error('Invalid investment labels')}
  const safe=n=>Number.isSafeInteger(n)&&Math.abs(n)<=10000000000000;
