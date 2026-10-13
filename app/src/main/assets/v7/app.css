@@ -25,3 +25,4 @@ button,input,select,summary{touch-action:manipulation}button{min-height:44px}sma
 @media(max-height:520px){body.entry-focus nav[data-modern]{display:none}body.entry-focus main{padding-bottom:20px}}
 body.entry-focus nav[data-modern],body:has(#leaveEntry:not(.hidden)) nav[data-modern],body:has(#accountEntry:not(.hidden)) nav[data-modern],body:has(#transferEntry:not(.hidden)) nav[data-modern]{display:none}
 body.entry-focus main,body:has(#leaveEntry:not(.hidden)) main,body:has(#accountEntry:not(.hidden)) main,body:has(#transferEntry:not(.hidden)) main{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+#entry{overflow-x:hidden;max-width:100%}#entry .modern-entry-grid,#entry .modern-entry-tile{min-width:0;max-width:100%}#entry input[type=date]{min-width:0;max-width:100%;font-size:14px!important;padding-left:0!important;padding-right:0!important}
