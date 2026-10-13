@@ -54,6 +54,7 @@ jobs:
           node tests/v39.cjs
           node tests/v40.cjs
           node tests/v41.cjs
+          node tests/v42.cjs
       - name: Save screen previews
         if: always()
         uses: actions/upload-artifact@v4
