@@ -1021,8 +1021,8 @@ const v7Accents={mint:{label:'Mint',color:'#8DE8C1',tint:'#102A20',palette:['#8D
 function v7ApplyAccent(){const root=document.documentElement,key=state.uiPreferences?.amoledAccent||'mint',a=v7Accents[key]||v7Accents.mint;root.dataset.amoledAccent=key;root.style.setProperty('--amoled-accent',a.color);root.style.setProperty('--amoled-tint',a.tint);if(root.dataset.theme==='amoled')palette=a.palette}
 function v7RecentHome(list){
  let wrap=$('v7HomeRecent');if(!wrap){wrap=node('div');wrap.id='v7HomeRecent';$('home').append(wrap)}wrap.replaceChildren();
- const head=node('div','v7-recent-head');head.append(node('h2',null,'Recent entries'),action('View all',()=>v7AllEntries()));wrap.append(head);
- const holder=node('div');wrap.append(holder);v7CompactEntries(holder,list.slice(0,3));
+ const head=node('div','v7-recent-head');head.append(node('h2',null,'Recent entries'),list.length?action('View all',()=>v7AllEntries()):node('span','muted','None yet'));wrap.append(head);
+ const holder=node('div');wrap.append(holder);if(list.length)v7CompactEntries(holder,list.slice(0,3));
 }
 function v7CompactEntries(holder,list){if(!list.length){holder.append(node('p','empty','No entries in this period.'));return}for(const r of list){const b=action('',()=>openEntry(r.id));b.className='recent-row';const glyph=node('span','transaction-icon');glyph.innerHTML=icon(r.category);const text=node('span','transaction-text');text.append(node('strong',null,r.note||r.category),node('small',null,categoryLabel(r)+' · '+displayDate(r.date)));const amount=node('strong','transaction-amount',(recordCredit(r)?'+':'−')+money(r.amount));amount.style.color=recordCredit(r)?'var(--income-color)':kind(r.category)==='aside'?'var(--save-color)':'var(--ink)';b.append(glyph,text,amount);holder.append(b)}}
 function v7AllEntries(){const d=workflowDialog('All entries'),holder=node('div');d.append(node('p','muted',reportRange().label),holder);v7CompactEntries(holder,modernRecords());for(const b of holder.querySelectorAll('button')){const click=b.onclick;b.onclick=()=>{d.close();click()}}}
