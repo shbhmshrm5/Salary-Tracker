@@ -1,24 +1,40 @@
-SALARY — first version for Shubham
+# Salary Tracker 5.0
 
-TRY IT NOW
-Open app/src/main/assets/index.html in a desktop browser. No account or internet required. Enter salary through Settings > Add income. Enter each expense using amount, category, Save. Date defaults to today. Use Home's month selector for previous months; Insights shows spending categories or a six-month trend.
+A rebuilt offline personal-finance app with five main tabs: Salary, Spend, Home, Calendar and Settings. Credit cards and manual investments are sections inside Salary. Calendar includes leave ranges and budgets. Home has account-type summaries, spending breakdown, recent entries and expense/voice actions.
 
-ANDROID INSTALLATION
-This package contains the Android source project, NOT an APK. The native Android wrapper has not been compiled or tested on a phone in this environment.
-1. On a computer with Android Studio, extract this folder.
-2. Open the SalaryTracker folder as a project. Let Android Studio download SDK 35 and sync Gradle (internet required). Use Java 17 and Gradle 8.9 when prompted; no Gradle wrapper is included.
-3. Use Build > Build App Bundle(s) / APK(s) > Build APK(s), or the equivalent APK build action in your Android Studio version.
-4. Copy app/build/outputs/apk/debug/app-debug.apk to your phone, open it, and allow installation from that file source if prompted.
-A developer can do these steps for you. No Play Store publishing is required for personal use.
+## Source structure
 
-IMPORTANT BEHAVIOUR
-Income is explicitly entered each month; salary is not copied automatically.
-Left = that month's income minus expenses, savings and investments. It is not a bank account balance; previous month balances are not carried forward.
-Charts include expenses only, not savings/investments. Six-month charts end in the selected month; no entries means zero recorded spending, not verified zero spending.
-Records stay on the device/browser where you entered them. Browser records and Android records do not automatically sync; use backup/restore to transfer.
-Use Settings > Export backup regularly. Uninstalling, clearing app data, or browser storage can erase records. Restore replaces current records after confirmation. CSV exports the selected month for Excel.
-No bank linking, recurring transactions, automatic imports, cloud sync, app lock, or budgets in this version.
-The Android screen uses system window insets for status bars, display cutouts and gesture navigation instead of fixed phone dimensions.
+- `app/src/main/assets/index.html`: app shell.
+- `app/src/main/assets/app.css`: all visual styles and five themes.
+- `app/src/main/assets/app.js`: screens, forms, navigation and native bridge.
+- `app/src/main/assets/ledger.js`: pure validation and money calculations.
+- `app/src/main/assets/io.js`: CSV parsing, export, legacy import and full restore.
+- `app/src/main/java/...`: existing native SQLite storage, export/file picker, card scanner, voice, app lock, optional payment drafts, weekly phone copies and legacy Drive connection.
 
-CHECK BEFORE RELYING ON IT
-On the phone: enter a salary of 50,000, groceries 2,000, savings 5,000 and investments 3,000 in the same month. Left should be 40,000, Spent 2,000, Set aside 8,000. Check edit/delete, month switching, backup export/restore and CSV export. Check the punch-hole and bottom gesture area on your actual phone.
+The data schema remains version 6. Android keeps using the existing `salary-ledger.db` and profile databases; browser preview keeps using `salary-v3` and migrates old versions. No existing transactions or accounts are replaced on launch.
+
+## CSV and JSON
+
+Settings → Import / export CSV exports **all stored dates**, including archived accounts and all collections, regardless of the currently selected month. Full CSV uses the `SalaryTracker/2` format. It has readable columns and a `Data` JSON column that preserves original account identifiers, opening balances, payer details, investment labels, nested repayments, and settings. Repayments and reimbursements also have readable rows. Leave, budget, schedule, adjustment and money-movement rows are included. Keep the `Data` column unchanged; edit transactions in the app.
+
+Settings → Backup & restore supports full JSON and full CSV restore, validates the complete file, previews its contents, asks before replacement, and keeps a pre-import recovery copy. A full CSV restores data exactly; it is not a filtered financial report.
+
+Older ledger CSVs can be imported with account mapping and ID duplicate checks. Invalid rows block the entire import; no rows are silently dropped. Opening balances unavailable in an old export are labelled **Set balance**, not treated as verified zero. Old repayment/reimbursement rows are refused when required original details cannot be reconstructed safely. Transaction-only exports cannot recover unexported dates, original payer/share details, opening balances or planning data.
+
+## Android build and tests
+
+Use Java 17, Gradle 8.9 and Android SDK 35:
+
+```
+node tests/v5-ledger.cjs
+npm install --no-save playwright
+npx playwright install --with-deps chromium
+node tests/v5-mobile.cjs
+gradle testDebugUnitTest assembleDebug bundleDebug lintDebug --no-daemon
+```
+
+CI runs the new ledger/import/export and mobile tests, existing native unit tests and Android 16 system-inset smoke test. APKs are split by ABI; arm64 is suitable for recent Android phones. The generated APK is a **debug preview**, not a signed production release. A release requires the private environment variables declared in `app/build.gradle`. Never publish signing credentials in this repository.
+
+Preview this project by opening `app/src/main/assets/index.html` in a browser. No network calls or external web libraries are used by the interface. Voice/photo scanning and phone lock require the Android wrapper. Google Drive is visibly unavailable for new connections until the developer configures authentication; existing configured profiles and their controls remain supported. Notification capture is opt-in and creates reviewable drafts only.
+
+Weekly phone-only copies are erased on uninstall. Export a full CSV or JSON outside the app before uninstalling or clearing app data. A differently signed APK cannot update an existing installation.

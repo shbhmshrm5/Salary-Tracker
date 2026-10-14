@@ -30,23 +30,8 @@ jobs:
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-          node tests/mobile.cjs
-          node tests/v2.cjs
-          node tests/v3.cjs
-          node tests/v31.cjs
-          node tests/v32.cjs
-          node tests/v33.cjs
-          node tests/v34.cjs
-          node tests/v35.cjs
-          node tests/v37.cjs
-          node tests/v38.cjs
-          node tests/v39.cjs
-          node tests/v40.cjs
-          node tests/v41.cjs
-          node tests/v42.cjs
-          node tests/v43.cjs
-          node tests/money.cjs
-          node tests/themes.cjs
+          node tests/v5-ledger.cjs
+          node tests/v5-mobile.cjs
       - name: Save screen previews
         if: always()
         uses: actions/upload-artifact@v4
