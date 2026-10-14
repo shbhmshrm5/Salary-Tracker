@@ -26,4 +26,20 @@ public class LedgerStoreTest {
   JSONObject data=empty().put("version",5).put("profile",new JSONObject().put("name","Alice"));data.getJSONArray("records").put(new JSONObject().put("id","only-alice").put("amount",100));
   alice.save(data.toString());assertEquals("",bob.load());assertEquals("",device.load());alice.close();alice=new LedgerStore(context,"alice");assertEquals("Alice",new JSONObject(alice.load()).getJSONObject("profile").getString("name"));alice.close();bob.close();device.close();
  }
+ @Test public void versionSixSnapshotCanRestoreToFreshDatabase() throws Exception {
+  android.content.Context c=RuntimeEnvironment.getApplication();
+  c.deleteDatabase("salary-ledger.db");c.deleteDatabase("salary-fresh-install.db");
+  JSONObject data=empty().put("version",6).put("profile",new JSONObject().put("name","Asha"));
+  data.getJSONArray("accounts").put(new JSONObject().put("id","bank").put("name","Bank").put("bank","HDFC").put("opening",100000).put("date","2026-01-01"));
+  data.getJSONArray("records").put(new JSONObject().put("id","pay").put("accountId","bank").put("category","Salary").put("amount",25000).put("date","2026-01-05").put("note","Salary"));
+  data.put("defaultAccount","bank").put("uiPreferences",new JSONObject().put("textSize","large"));
+  try(LedgerStore source=new LedgerStore(c)){source.save(data.toString());}
+  assertTrue(PhoneBackupWorker.snapshot(c,""));assertTrue(PhoneBackupWorker.last(c,"")>0);
+  String exported=PhoneBackupWorker.latest(c,"");assertEquals(6,new JSONObject(exported).getInt("version"));
+  try(LedgerStore restored=new LedgerStore(c,"fresh-install")){restored.save(exported);JSONObject result=new JSONObject(restored.load());
+   assertEquals("Asha",result.getJSONObject("profile").getString("name"));
+   assertEquals("bank",result.getString("defaultAccount"));
+   assertEquals(25000,result.getJSONArray("records").getJSONObject(0).getInt("amount"));
+   assertEquals("large",result.getJSONObject("uiPreferences").getString("textSize"));}
+ }
 }

@@ -2,6 +2,8 @@ name: Build Android app
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,19 +26,6 @@ jobs:
           cmdline-tools-version: '11076708'
       - name: Install Android SDK packages
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
-      - name: Keep the signing key for future updates
-        uses: actions/cache@v4
-        with:
-          path: .signing/salary.keystore
-          key: salary-signing-key-v2
-      - name: Prepare app signing key
-        run: |
-          mkdir -p .signing
-          if [ ! -f .signing/salary.keystore ]; then
-            keytool -genkeypair -keystore .signing/salary.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Salary Tracker" -keyalg RSA -keysize 2048 -validity 10000
-          fi
-      - name: Signing certificate for Google registration
-        run: keytool -list -v -keystore .signing/salary.keystore -storepass android -alias androiddebugkey
       - name: Check mobile screens
         run: |
           npm install --no-save playwright
@@ -56,6 +45,8 @@ jobs:
           node tests/v41.cjs
           node tests/v42.cjs
           node tests/v43.cjs
+          node tests/money.cjs
+          node tests/themes.cjs
       - name: Save screen previews
         if: always()
         uses: actions/upload-artifact@v4
@@ -63,7 +54,7 @@ jobs:
           name: Salary-screen-previews
           path: previews/
       - name: Build and check Android app
-        run: gradle testDebugUnitTest assembleDebug lintDebug --no-daemon
+        run: gradle testDebugUnitTest assembleDebug bundleDebug lintDebug --no-daemon
       - name: Save installation file
         uses: actions/upload-artifact@v4
         with:
@@ -71,6 +62,12 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
+      - name: Save Android App Bundle for size inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: Salary-Android-debug-AAB
+          path: app/build/outputs/bundle/debug/app-debug.aab
+          if-no-files-found: error
 
       - name: Make room for the Android 16 emulator
         run: |

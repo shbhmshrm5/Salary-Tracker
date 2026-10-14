@@ -60,8 +60,10 @@ public class MainActivity extends Activity {
   try{new org.json.JSONObject(data);out=file.startWrite();out.write(data.getBytes(StandardCharsets.UTF_8));file.finishWrite(out);return true;}catch(Exception e){if(out!=null)file.failWrite(out);return false;}
  }
  @JavascriptInterface public String loadRecoveryData(){try{return new String(new android.util.AtomicFile(new java.io.File(getFilesDir(),"before-restore"+profileNamespace+".json")).readFully(),StandardCharsets.UTF_8);}catch(Exception e){return "";}}
+ @JavascriptInterface public String phoneBackupStatus(){try{return new org.json.JSONObject().put("last",PhoneBackupWorker.last(MainActivity.this,profileNamespace)).toString();}catch(Exception e){return "{}";}}
+ @JavascriptInterface public String latestPhoneBackup(){return PhoneBackupWorker.latest(MainActivity.this,profileNamespace);}
  @JavascriptInterface public String loadData(){try{synchronized(DriveSync.LOCK){bridgeNamespace=profileNamespace;return ledger.load();}}catch(Exception e){return "DATABASE_ERROR";}}
- @JavascriptInterface public boolean saveData(String data){try{synchronized(DriveSync.LOCK){if(!profileNamespace.equals(bridgeNamespace))return false;ledger.save(data);}runOnUiThread(()->drive.changed());return true;}catch(Exception e){return false;}}
+ @JavascriptInterface public boolean saveData(String data){try{synchronized(DriveSync.LOCK){if(!profileNamespace.equals(bridgeNamespace))return false;ledger.save(data);}runOnUiThread(()->{drive.changed();PhoneBackupWorker.schedule(MainActivity.this,profileNamespace);});return true;}catch(Exception e){return false;}}
 @JavascriptInterface public void setTheme(String name){runOnUiThread(()->{boolean light=!"amoled".equals(name);darkMode=!light;int bg=android.graphics.Color.parseColor("amoled".equals(name)?"#000000":"teal".equals(name)?"#F3F8F8":"#F6F8FC");web.setBackgroundColor(bg);safeArea.setBackgroundColor(bg);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);if(Build.VERSION.SDK_INT>=30){
  WindowInsetsController controller=getWindow().getInsetsController();
  int appearance=WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS|WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
