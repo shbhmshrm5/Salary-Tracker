@@ -45,3 +45,27 @@ html[data-theme=amoled] .setting-icon,html[data-theme=amoled] .setting-icon.blue
 html[data-theme=amoled] .modern-card-holder .credit-card-face,html[data-theme=amoled] .credit-card-face[data-bank]{background:#000;border:1px solid var(--border)}
 html[data-theme=amoled] .modern-chip{background:#24272D;border-color:#555B65}
 html[data-theme=amoled] .modern-home-nav .modern-nav-icon{background:#101114!important;border:1px solid var(--accent);color:var(--accent)}
+
+/* v4.3: searchable category sheet and reachable Home actions. */
+#v7CategorySheet{box-sizing:border-box;position:fixed;inset:auto 0 0;margin:0 auto;width:100%;max-width:520px;max-height:85vh;max-height:85dvh;padding:20px 18px calc(24px + env(safe-area-inset-bottom));border:1px solid var(--border);border-bottom:0;border-radius:28px 28px 0 0;background:var(--surface);color:var(--ink);overflow-y:auto;overscroll-behavior:contain}
+#v7CategorySheet::backdrop{background:rgba(0,0,0,.68)}
+#v7CategorySheet .v7-sheet-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 18px}
+#v7CategorySheet h2{font-size:22px;letter-spacing:-.5px;margin:0}
+#v7CategorySheet .v7-sheet-close{flex:0 0 44px;width:44px;height:44px;padding:0;margin:0;border:1px solid var(--border);border-radius:50%;font-size:26px;background:var(--panel);color:var(--ink)}
+#v7CategorySheet input{width:100%;min-height:50px;margin:0;padding:12px 15px;border-radius:16px;font-size:16px;background:var(--panel);border:1px solid var(--border)}
+#v7CategorySheet .v7-choice-count{font-size:12px;line-height:1.5;color:var(--muted);margin:14px 2px}
+#v7CategorySheet .v7-choice-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#v7CategorySheet .v7-category-choice{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-width:0;min-height:96px;margin:0;padding:14px 7px;border:1px solid var(--border);border-radius:18px;background:var(--surface);color:var(--ink);text-align:center;line-height:1.35;font-size:13px;font-weight:550}
+#v7CategorySheet .v7-choice-label{overflow-wrap:anywhere;max-width:100%}
+#v7CategorySheet .v7-category-choice[aria-pressed=true]{border-color:var(--accent);background:var(--panel);box-shadow:inset 0 0 0 1px var(--accent)}
+.v7-choice-check{position:absolute;right:7px;top:5px;color:var(--accent);font-size:12px}
+#v7HomeActions{position:fixed;right:max(18px,calc((100vw - 600px)/2 + 18px));bottom:calc(108px + env(safe-area-inset-bottom));z-index:30;display:flex;align-items:center;gap:10px}
+#v7HomeActions button{display:flex;align-items:center;justify-content:center;gap:9px;height:56px;margin:0;border-radius:28px;box-shadow:0 4px 20px #0004;font-weight:650;font-size:15px}
+#v7AddExpense{padding:0 22px;background:var(--accent);color:var(--accent-text);border:1px solid var(--accent)}
+#v7AddExpense>span:first-child{font-size:26px;font-weight:400}
+#v7VoiceExpense{width:56px;padding:0;background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
+#v7VoiceExpense .icon{width:23px;height:23px}
+#home{padding-bottom:80px}
+#home.hidden #v7HomeActions{display:none}
+#v7HomeActions button:focus-visible,#v7CategorySheet button:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+@media(max-width:340px){#v7CategorySheet{padding-left:12px;padding-right:12px}#v7CategorySheet .v7-choice-list{gap:8px}#v7CategorySheet .v7-category-choice{font-size:12px}#v7AddExpense{padding:0 17px}}

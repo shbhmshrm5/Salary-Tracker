@@ -6,7 +6,7 @@ function v7ExpenseCategories(){
  const featured=mode==='income'?['Salary','Bonus','Freelance','Interest','Gift','Other income']:mode==='aside'?['SIP','Investments','Savings']:['Food','Groceries','Travel','Shopping','Bills','Health'];
  const shown=[...new Set([...featured.filter(c=>names.includes(c)),...(featured.includes(selected)?[]:[selected])])];
  for(const c of shown){const b=action('',()=>pick(c));b.type='button';b.className=c===selected?'selected':'';const glyph=node('span','v7-category-icon');glyph.innerHTML=icon(c);b.append(glyph,node('span',null,c==='Other income'?'Other':c));b.setAttribute('aria-pressed',String(c===selected));holder.append(b)}
- const more=$('moreCategories');more.classList.remove('hidden');more.textContent='All categories';more.onclick=()=>{const d=workflowDialog('Choose category');const search=node('input');search.type='search';search.placeholder='Search categories';d.append(search);const list=node('div','v7-choice-list');d.append(list);const draw=()=>{list.replaceChildren();for(const c of names.filter(x=>x.toLowerCase().includes(search.value.toLowerCase()))){const b=action(c,()=>{d.close();pick(c)});list.append(b)}};search.oninput=draw;draw()};
+ const more=$('moreCategories');more.classList.remove('hidden');more.textContent='All categories';more.onclick=()=>v7CategorySheet(names);
  v7Subcategories();v7InvestmentVisibility();
 }
 function v7Subcategories(){
@@ -62,6 +62,7 @@ function v7SaveEntry(e){
  if(update({records:state.records.filter(x=>x.id!==editing).concat(r)})){reportMode='month';$('month').value=date.slice(0,7);categoryFilter=null;$('expenseSearch').value='';$('note').value='';$('amount').value='';$('date').value=today();editing=null;entrySnapshot=formSnapshot();show(entryReturn);message('Entry saved')}
 }
 function initV7(){
+ v7HomeActions();
  const previousPick=pick;pick=function(c){previousPick(c);v7ExpenseCategories();v7UpdateSave()};
  const previousOpen=openEntry;openEntry=function(...args){const result=previousOpen(...args);if(page==='entry'){const item=state.records.find(r=>r.id===editing);for(const [id,key] of [['v7AMC','amc'],['v7Scheme','scheme'],['v7InvestCategory','group']])$(id).value=item?.investment?.[key]||'';v7InvestmentVisibility();v7UpdateSave();entrySnapshot=formSnapshot()}return result};
  const previousVoiceReview=reviewVoice;reviewVoice=function(...args){const result=previousVoiceReview(...args);if(page==='entry'){v7Subcategories();v7UpdateSave();entrySnapshot=formSnapshot()}return result};
@@ -88,3 +89,22 @@ function v7CompactEntries(holder,list){if(!list.length){holder.append(node('p','
 function v7AllEntries(){const d=workflowDialog('All entries'),holder=node('div');d.append(node('p','muted',reportRange().label),holder);v7CompactEntries(holder,modernRecords());for(const b of holder.querySelectorAll('button')){const click=b.onclick;b.onclick=()=>{d.close();click()}}}
 const v7OriginalAppearance=modernAppearance;
 modernAppearance=function(){v7OriginalAppearance();const d=[...document.querySelectorAll('dialog[open]')].at(-1);if(!d||document.documentElement.dataset.theme!=='amoled')return;const section=node('div','v7-accent-section');section.append(node('h3',null,'AMOLED accent'));const choices=node('div','v7-accent-choices');section.append(choices);for(const [key,a] of Object.entries(v7Accents)){const b=action('',()=>{if(update({uiPreferences:{textSize:'comfortable',...state.uiPreferences,amoledAccent:key}})){render();modernAppearance()}});b.className='v7-accent-choice';b.setAttribute('aria-pressed',String((state.uiPreferences?.amoledAccent||'mint')===key));const swatch=node('span','v7-accent-swatch');swatch.style.background=a.color;b.append(swatch,node('span',null,a.label));choices.append(b)}const heading=[...d.querySelectorAll('h3')].find(h=>h.textContent==='Text size');if(heading)heading.before(section);else d.append(section)};
+
+// Dedicated sheet keeps category styling isolated from other workflow dialogs.
+function v7CategorySheet(names){
+ let d=$('v7CategorySheet');if(!d){d=node('dialog');d.id='v7CategorySheet';document.querySelector('main').append(d)}
+ d.replaceChildren();d.setAttribute('aria-labelledby','v7CategoryTitle');
+ const head=node('div','v7-sheet-head'),title=node('h2',null,'Choose category');title.id='v7CategoryTitle';
+ const close=action('×',()=>d.close());close.className='v7-sheet-close';close.setAttribute('aria-label','Close categories');head.append(title,close);
+ const search=node('input');search.type='search';search.placeholder='Search categories';search.setAttribute('aria-label','Search categories');
+ const list=node('div','v7-choice-list'),count=node('p','v7-choice-count');count.setAttribute('role','status');
+ d.append(head,search,count,list);
+ const draw=()=>{list.replaceChildren();const matches=names.filter(c=>c.toLowerCase().includes(search.value.trim().toLowerCase()));count.textContent=matches.length?matches.length+' categories · tap to select':'No categories found. Try another name.';
+ for(const c of matches){const b=action('',()=>{d.close();pick(c)});b.className='v7-category-choice';b.setAttribute('aria-pressed',String(c===category));const glyph=node('span','v7-category-icon');glyph.innerHTML=icon(c);glyph.setAttribute('aria-hidden','true');b.append(glyph,node('span','v7-choice-label',c));if(c===category){const check=node('span','v7-choice-check','✓');check.setAttribute('aria-hidden','true');b.append(check)}list.append(b)}};
+ search.oninput=draw;draw();d.showModal();close.focus();
+}
+function v7HomeActions(){
+ const dock=node('div');dock.id='v7HomeActions';dock.setAttribute('role','group');dock.setAttribute('aria-label','Quick expense entry');
+ const add=action('',()=>openEntry());add.id='v7AddExpense';const plus=node('span',null,'+');plus.setAttribute('aria-hidden','true');add.append(plus,node('span',null,'Add expense'));
+ const mic=action('',()=>openVoice());mic.id='v7VoiceExpense';mic.innerHTML=MIC;mic.setAttribute('aria-label','Add expense by voice');mic.title='Add by voice';dock.append(add,mic);$('home').append(dock);
+}
