@@ -1031,3 +1031,17 @@ input[type="checkbox"] {
     gap: 0;
   }
 }
+
+/* Compact Home keeps the recent-entry heading above its action dock. */
+.hero {
+  padding: 16px 18px;
+}
+.section {
+  margin-top: 22px;
+}
+.donut {
+  width: 116px;
+}
+.home-actions {
+  bottom: calc(82px + env(safe-area-inset-bottom));
+}

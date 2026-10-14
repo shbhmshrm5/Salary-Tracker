@@ -121,7 +121,12 @@
       "",
       JSON.stringify({
         state: meta,
-        collections: COLLECTIONS.filter((k) => Object.hasOwn(d, k)),
+        collections: COLLECTIONS.filter(
+          (k) => Object.hasOwn(d, k) && Array.isArray(d[k]),
+        ),
+        nullCollections: COLLECTIONS.filter(
+          (k) => Object.hasOwn(d, k) && d[k] === null,
+        ),
       }),
     ]);
     for (const key of COLLECTIONS)
@@ -216,6 +221,10 @@
       if (type === "metadata") {
         metadata++;
         Object.assign(d, x.state || x);
+        for (const key of x.nullCollections || []) {
+          if (!COLLECTIONS.includes(key)) throw Error("Invalid collection");
+          d[key] = null;
+        }
         if (x.collections)
           for (const key of x.collections) {
             if (!COLLECTIONS.includes(key)) throw Error("Invalid collection");

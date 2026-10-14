@@ -304,3 +304,9 @@ assert.deepEqual(L.migrate(rich), rich);
 console.log(
   "PASS ledger: balances, card bills, refunds, repayments, reimbursements, openings, investments, migration, complete CSV roundtrip, empty collections, old CSV account mapping, duplicate protection and malformed rows",
 );
+
+const nullExtended = { ...L.blank(), budgets: null, schedules: null };
+assert.deepEqual(
+  IO.inspect(IO.fullCsv(nullExtended), L.blank(), () => "").data,
+  nullExtended,
+);

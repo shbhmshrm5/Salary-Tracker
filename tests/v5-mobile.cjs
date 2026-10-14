@@ -115,7 +115,10 @@ function seed() {
     }),
     errors = [];
   let accept = true;
-  p.on("pageerror", (e) => errors.push(e.stack));
+  p.on(
+    "pageerror",
+    (e) => (errors.push(e.stack), console.error("BROWSER_ERROR", e.stack)),
+  );
   p.on("dialog", async (d) => (accept ? d.accept() : d.dismiss()));
   await p.addInitScript((data) => {
     if (!localStorage.getItem("v5-seeded")) {
@@ -145,6 +148,13 @@ function seed() {
   const dock = await p.locator("#homeActions").boundingBox(),
     nav = await p.locator("nav").boundingBox();
   assert(dock.y + dock.height <= nav.y);
+  const recent = await p
+    .getByRole("heading", { name: "Recent entries", exact: true })
+    .boundingBox();
+  assert(
+    recent.y + recent.height <= dock.y,
+    "Home actions overlap Recent entries heading",
+  );
   await p.locator("#homeActions .add").click();
   assert.equal(await p.locator("#amount").inputValue(), "");
   assert.equal(
@@ -285,14 +295,12 @@ function seed() {
     );
     assert(
       (
-        await p
-          .locator(".calendar-grid button")
-          .evaluateAll((xs) =>
-            xs.map((x) => ({
-              w: x.getBoundingClientRect().width,
-              h: x.getBoundingClientRect().height,
-            })),
-          )
+        await p.locator(".calendar-grid button").evaluateAll((xs) =>
+          xs.map((x) => ({
+            w: x.getBoundingClientRect().width,
+            h: x.getBoundingClientRect().height,
+          })),
+        )
       ).every((x) => x.w >= 43.9 && x.h >= 44),
     );
     await p.evaluate(() => Salary.entryForm("expense"));

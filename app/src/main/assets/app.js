@@ -401,7 +401,7 @@ function renderHome(main) {
       "caption",
       unknown.length
         ? "Opening balances weren’t in your old export. Set them below."
-        : "Across your bank accounts, wallets and cash · today",
+        : "Bank, wallet & cash · today",
     ),
   );
   if (state.profile?.name)
@@ -668,9 +668,10 @@ function allActivity() {
 }
 function activityRow(x) {
   const b = listRow(x.title, x.sub, money(x.amount), x.open, x.icon);
-  b.querySelector(".value").classList.add(
-    x.type === "income" ? "income" : x.type === "aside" ? "invest" : "",
-  );
+  if (x.type === "income" || x.type === "aside")
+    b.querySelector(".value").classList.add(
+      x.type === "income" ? "income" : "invest",
+    );
   return b;
 }
 function transactionGroups(target, rows) {
@@ -1313,7 +1314,9 @@ function renderSettings(main) {
         ],
         [
           "Default spending account",
-          accountName(account(state.defaultAccount)),
+          state.defaultAccount
+            ? accountName(account(state.defaultAccount))
+            : "Choose account",
           () => defaultAccountScreen(),
           "wallet",
           "teal",
@@ -2281,13 +2284,8 @@ function accountDetails(a) {
       ),
     );
     if (
-      !allActivity().some(
-        (x) =>
-          state.records.some((r) => r.id === x.id && r.accountId === a.id) ||
-          state.transfers.some(
-            (t) => t.id === x.id && [t.from, t.to].includes(a.id),
-          ),
-      ) &&
+      !state.records.some((r) => r.accountId === a.id) &&
+      !state.transfers.some((t) => [t.from, t.to].includes(a.id)) &&
       !state.records.some((r) =>
         [...(r.repayments || []), ...(r.shared?.collections || [])].some(
           (p) => p.accountId === a.id,
@@ -2299,9 +2297,9 @@ function accountDetails(a) {
     )
       body.append(
         button(
-          "Delete empty account",
+          "Delete unused account",
           () => {
-            if (confirm("Delete this empty account?")) {
+            if (confirm("Delete this account and its opening balance?")) {
               change((d) => {
                 d.accounts = d.accounts.filter((x) => x.id !== a.id);
                 if (d.defaultAccount === a.id) d.defaultAccount = null;
