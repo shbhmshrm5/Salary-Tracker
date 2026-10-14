@@ -235,7 +235,7 @@ html[data-theme=amoled] .modern-home-nav .modern-nav-icon{background:#101114!imp
 button,summary,.settings-row,.setting-item{min-height:44px}
 .empty{font-size:14px;line-height:1.45}
 #homeDonut.is-empty{display:block;padding:2px 0 4px}
-#homeDonut.is-empty .empty{max-width:none;margin:6px 0 10px;text-align:left}
+#homeDonut.is-empty .empty{max-width:none;margin:6px 0 10px;padding:0;text-align:left}
 #homeDonut.is-empty .empty-action{display:inline-flex;align-items:center;width:auto;min-height:44px;margin:0;padding:8px 12px;border:1px solid var(--border);border-radius:12px;background:var(--panel);color:var(--ink);font-size:13px}
 #v7HomeRecent{padding-bottom:95px}
 @media(max-width:345px){#v7CategorySheet .v7-choice-list{grid-template-columns:1fr}}
