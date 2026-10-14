@@ -60,7 +60,7 @@ def verify(name):
     assert y2<height, f'Content overlaps navigation area: {y2}/{height}'
     print(f'PASS {name}: native WebView y={y1}..{y2}, display height={height}',flush=True)
 
-adb('install','-r','app/build/outputs/apk/debug/app-debug.apk')
+adb('install','-r','app/build/outputs/apk/debug/app-x86_64-debug.apk')
 adb('shell','wm','dismiss-keyguard')
 print(adb('shell','am','start','-W','-n','com.shubham.salarytracker/.MainActivity'),flush=True)
 time.sleep(15)
