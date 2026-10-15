@@ -1,4 +1,4 @@
-/* Money Map 5.2. Every screen has one implementation; no overrides. */
+/* Money Map 5.3. Every screen has one implementation; no overrides. */
 "use strict";
 const L = Ledger,
   IO = LedgerIO,
@@ -4167,7 +4167,7 @@ function previewCsv(text, name) {
 }
 function helpScreen() {
   openPanel("Help & app information", (body) => {
-    body.append(el("h2", null, "Money Map 5.2"));
+    body.append(el("h2", null, "Money Map 5.3"));
     for (const [title, text] of [
       [
         "Your data",
@@ -4193,7 +4193,7 @@ function helpScreen() {
         "Safe entry",
         "Voice and payment notifications create drafts. Review before saving.",
       ],
-      ["Build", "5.2 · offline interface · no external web libraries"],
+      ["Build", "5.3 · offline interface · no external web libraries"],
     ])
       body.append(el("h3", null, title), el("p", "info-note", text));
   });
@@ -4484,18 +4484,19 @@ function cloudScreen() {
       connected = status.startsWith("Connected:");
     body.append(el("p", "info-note", status));
     if (!connected) {
+      body.append(el("p", "info-note", "Connect your Google account to keep private app backups in Drive. Each Google account has its own ledger. Your device-only entries remain on this phone; you can import them after connecting."));
+      if (native?.connectDrive) body.append(button("Connect Google account", () => {
+        if (confirm("Open a separate Google profile? Your current entries stay in the device-only profile. After connecting, use Import device-only ledger to copy them.")) native.connectDrive();
+      }, "primary"));
       body.append(
-        el(
-          "p",
-          "warning",
-          "New Google sign-in needs developer configuration. It is unavailable in this build. You can manually save a backup into Google Drive using Android’s file picker.",
-        ),
-        button("Save full backup", exportJson, "primary"),
+        button("Google setup details", googleSetupScreen, "secondary"),
+        button("Save full backup", exportJson, "secondary"),
       );
       return;
     }
     body.append(
       button("Sync now", () => native.backupDrive(), "primary"),
+      button("Renew Google permission", () => native.connectDrive(), "secondary"),
       button(
         "Review incoming changes",
         () => incomingSyncScreen(),
@@ -4527,6 +4528,16 @@ function cloudScreen() {
         "secondary",
       ),
     );
+  });
+}
+function googleSetupScreen() {
+  openPanel("Google setup details", body => {
+    body.append(el("p", "info-note", "Google must recognise this signed app before it can connect. Enable Google Drive API, configure the consent screen and create an Android OAuth client using these details. Add your Google email as a test user while the project is in testing."));
+    let info = {};
+    try { info = JSON.parse(native?.googleSetupInfo?.() || "{}"); } catch {}
+    body.append(detailsLine("Package name", info.packageName || "com.shubham.salarytracker"));
+    body.append(detailsLine("Signing SHA-1", info.sha1 || "Open this screen in the Android app"));
+    body.append(el("p", "info-note", "Register the certificate shown here, not a fingerprint from an older APK. Future builds need the same signing key or a new Google registration. No password or client secret is needed in the app."));
   });
 }
 window.onDriveBackups = (raw) => {
@@ -4576,6 +4587,7 @@ window.onCloudEvent = (raw) => {
       }
       finish();
       load();
+      applyTheme();
       render();
     } else toast(x.message || "Drive status updated");
   } catch {

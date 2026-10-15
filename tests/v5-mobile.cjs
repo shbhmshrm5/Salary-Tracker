@@ -126,6 +126,8 @@ function seed() {
       localStorage.setItem("v5-seeded", "yes");
     }
     window.Android = {
+      connectDrive: () => { window.googleConnectCalls = (window.googleConnectCalls || 0) + 1; },
+      googleSetupInfo: () => JSON.stringify({packageName:"com.shubham.salarytracker",sha1:"TEST-CERTIFICATE"}),
       startVoice: (lang) => {
         window.voiceCalls = (window.voiceCalls || 0) + 1;
         window.voiceLang = lang;
@@ -406,6 +408,11 @@ function seed() {
   assert(invalid);
   assert.deepEqual(await p.evaluate(()=>Salary.getState()),exported);
 
+  await p.evaluate(() => { finish(); cloudScreen(); });
+  await p.getByRole("button", {name:"Connect Google account",exact:true}).click();
+  assert.equal(await p.evaluate(() => window.googleConnectCalls), 1);
+  await p.getByRole("button", {name:"Google setup details",exact:true}).click();
+  assert(await p.getByText("TEST-CERTIFICATE",{exact:true}).isVisible());
   assert.deepEqual(errors, []);
   await b.close();
   console.log(

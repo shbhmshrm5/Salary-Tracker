@@ -1,4 +1,4 @@
-# Money Map 5.2
+# Money Map 5.3
 
 A rebuilt offline personal-finance app with five main tabs: Salary, Spend, Home, Calendar and Settings. Credit cards and manual investments are sections inside Salary. Calendar includes leave ranges and budgets. Home has account-type summaries, spending breakdown, recent entries and expense/voice actions.
 
@@ -35,7 +35,7 @@ gradle testDebugUnitTest assembleDebug bundleDebug lintDebug --no-daemon
 
 CI runs the new ledger/import/export and mobile tests, existing native unit tests and Android 16 system-inset smoke test. APKs are split by ABI; arm64 is suitable for recent Android phones. The generated APK is a **debug preview**, not a signed production release. A release requires the private environment variables declared in `app/build.gradle`. Never publish signing credentials in this repository.
 
-Preview this project by opening `app/src/main/assets/index.html` in a browser. No network calls or external web libraries are used by the interface. Voice/photo scanning and phone lock require the Android wrapper. Google Drive is visibly unavailable for new connections until the developer configures authentication; existing configured profiles and their controls remain supported. Notification capture is opt-in and creates reviewable drafts only.
+Preview this project by opening `app/src/main/assets/index.html` in a browser. No network calls or external web libraries are used by the interface. Voice/photo scanning and phone lock require the Android wrapper. Google Drive now exposes Connect Google account and Renew Google permission. Connection still requires Google Cloud registration of the installed package and certificate; setup details are available in the app. Live Google consent and cross-device backups have not been tested with a configured account. Notification capture is opt-in and creates reviewable drafts only.
 
 Weekly phone-only copies are erased on uninstall. Export a full CSV or JSON outside the app before uninstalling or clearing app data. A differently signed APK cannot update an existing installation.
 
