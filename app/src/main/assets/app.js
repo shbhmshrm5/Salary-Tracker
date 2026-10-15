@@ -1,4 +1,4 @@
-/* Salary Tracker 5.0. Every screen has one implementation; no overrides. */
+/* Salary Tracker 5.1. Every screen has one implementation; no overrides. */
 "use strict";
 const L = Ledger,
   IO = LedgerIO,
@@ -412,7 +412,7 @@ function renderHome(main) {
     ["bank", "Bank accounts", "bank"],
     ["wallet", "Wallets", "wallet"],
     ["cash", "Cash", "cash"],
-    ["card", "Credit cards", "card"],
+    ["card", "Card dues", "card"],
   ]) {
     const arr = all.filter((a) => accountType(a) === type),
       b = button("", () => accountsScreen(type), "money-cell");
@@ -478,10 +478,8 @@ function renderHome(main) {
   else
     card.append(
       empty(
-        "Your spending, clearly",
-        "Add an expense to see its category breakdown.",
-        "Add expense",
-        () => entryForm("expense"),
+        "Add your first expense",
+        "",
       ),
     );
   s.append(card);
@@ -512,7 +510,7 @@ function renderHome(main) {
   rec.append(
     list.length
       ? makeGroup(list.map(activityRow))
-      : empty("No entries yet", "Your latest entries will appear here."),
+      : empty("No entries yet", ""),
   );
   main.append(rec);
   const add = button("+ Add expense", () => entryForm("expense"), "add"),
@@ -535,7 +533,11 @@ function donut(records) {
   const sum = sorted.reduce((n, [, v]) => n + v, 0),
     colors =
       document.documentElement.dataset.theme === "amoled"
-        ? ["#86dfc3", "#9cbae0", "#b6a8db", "#7d969d", "#626e79"]
+        ? (document.documentElement.dataset.accent === "silver"
+          ? ["#e1e5e9", "#b8c1ca", "#909da9", "#6e7e8c", "#52616e"]
+          : document.documentElement.dataset.accent === "blue"
+            ? ["#c1d5ee", "#94b4da", "#7494ba", "#597796", "#425b75"]
+            : ["#b4ead9", "#86dfc3", "#6db49e", "#558e7e", "#416d61"])
         : ["#47796f", "#799d95", "#647c98", "#a5b8ae", "#d3d9de"];
   const chart = el("div", "chart"),
     holder = el("div", "donut"),
@@ -753,9 +755,22 @@ function renderSpend(main) {
   hero.append(
     el("div", "eyebrow", "Total spent"),
     el("div", "amount expense", money(total(records))),
-    el("p", "caption", "Includes your expenses paid by someone else."),
+
   );
   main.append(hero);
+  if (total(records) > 0) {
+    const breakdown = el("div", "spend-breakdown");
+    const totals = new Map();
+    for (const r of records) totals.set(r.category, (totals.get(r.category) || 0) + L.reportCents(r));
+    for (const [name, amount] of [...totals].filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]).slice(0,4)) {
+      const row = el("div", "bar-row"), track = el("div", "track"), fill = el("span");
+      fill.style.width = Math.min(100, amount / Math.max(1,total(records)) * 100) + "%";
+      track.append(fill);
+      row.append(el("span", null, name), el("strong", "value", money(amount)), track);
+      breakdown.append(row);
+    }
+    main.append(breakdown);
+  }
   const actions = el("div", "section-head");
   actions.append(
     button("All movements", () => activityScreen()),
@@ -860,7 +875,7 @@ function renderSalary(main) {
             money(L.cents(latest.amount)) +
             " on " +
             dateLabel(latest.date)
-        : "Salary, bonuses and other income in one place.",
+        : "",
     ),
   );
   const next = (state.schedules || [])
@@ -883,9 +898,9 @@ function renderSalary(main) {
       Number(month.slice(5, 7)) < 4
         ? Number(month.slice(0, 4)) - 1
         : Number(month.slice(0, 4)),
-    f = section("Financial year", null),
+    f = el("details", "section financial-year"),
     card = el("div", "card");
-  card.append(el("p", "caption", "Apr " + fy + " – Mar " + (fy + 1)));
+  f.append(el("summary", null, "Financial year · Apr " + fy + " – Mar " + (fy + 1)));
   const bars = el("div", "month-bars");
   const vals = Array.from({ length: 12 }, (_, i) => {
       const d = new Date(fy, 3 + i, 1),
@@ -1121,12 +1136,12 @@ function renderCalendar(main) {
   );
   main.append(el("div", "spacer"), step);
   const leaves = state.leaves.filter((x) => x.date.slice(0, 7) === month),
-    metrics = el("div", "summary-numbers");
+    metrics = el("div", "leave-summary");
   for (const [label, status] of [
     ["Taken", "taken"],
     ["Planned", "planned"],
   ]) {
-    const c = el("div", "card");
+    const c = el("div");
     c.append(
       el("small", null, label),
       el(
@@ -3622,7 +3637,7 @@ function insightsScreen() {
         return;
       }
       const sums = L.totals(state, from.value, to.value),
-        metrics = el("div", "summary-numbers");
+        metrics = el("div", "leave-summary");
       for (const [k, label] of [
         ["income", "Income"],
         ["expense", "Spending"],
@@ -3683,7 +3698,7 @@ function applyTheme() {
   document.documentElement.dataset.size =
     state?.uiPreferences?.textSize || "comfortable";
   document.documentElement.dataset.accent =
-    state?.uiPreferences?.amoledAccent || "mint";
+    state?.uiPreferences?.amoledAccent || "blue";
   try {
     localStorage.setItem("salary-theme", theme);
     native?.setTheme?.(theme);
@@ -3735,13 +3750,14 @@ function appearanceScreen() {
       body.append(el("h3", null, "AMOLED accent"));
       for (const [key, label] of [
         ["mint", "Mint"],
-        ["blue", "Ice blue"],
+        ["blue", "Slate Blue"],
+        ["silver", "Soft Silver"],
         ["lilac", "Lilac"],
       ])
         body.append(
           settingRow(
             label,
-            (state.uiPreferences?.amoledAccent || "mint") === key ? "✓" : "",
+            (state.uiPreferences?.amoledAccent || "blue") === key ? "✓" : "",
             () => {
               change(
                 (d) =>
@@ -4156,7 +4172,7 @@ function previewCsv(text, name) {
 }
 function helpScreen() {
   openPanel("Help & app information", (body) => {
-    body.append(el("h2", null, "Salary Tracker 5.0"));
+    body.append(el("h2", null, "Salary Tracker 5.1"));
     for (const [title, text] of [
       [
         "Your data",
@@ -4182,7 +4198,7 @@ function helpScreen() {
         "Safe entry",
         "Voice and payment notifications create drafts. Review before saving.",
       ],
-      ["Build", "5.0 rebuild · offline interface · no external web libraries"],
+      ["Build", "5.1 · offline interface · no external web libraries"],
     ])
       body.append(el("h3", null, title), el("p", "info-note", text));
   });

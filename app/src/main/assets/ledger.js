@@ -220,7 +220,7 @@
       throw Error("Invalid text size");
     if (
       d.uiPreferences?.amoledAccent != null &&
-      !["mint", "blue", "lilac"].includes(d.uiPreferences.amoledAccent)
+      !["mint", "blue", "silver", "lilac"].includes(d.uiPreferences.amoledAccent)
     )
       throw Error("Invalid AMOLED accent");
     const accounts = new Map(d.accounts.map((a) => [a.id, a])),

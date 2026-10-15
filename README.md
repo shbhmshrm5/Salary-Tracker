@@ -1,4 +1,4 @@
-# Salary Tracker 5.0
+# Salary Tracker 5.1
 
 A rebuilt offline personal-finance app with five main tabs: Salary, Spend, Home, Calendar and Settings. Credit cards and manual investments are sections inside Salary. Calendar includes leave ranges and budgets. Home has account-type summaries, spending breakdown, recent entries and expense/voice actions.
 
@@ -38,3 +38,9 @@ CI runs the new ledger/import/export and mobile tests, existing native unit test
 Preview this project by opening `app/src/main/assets/index.html` in a browser. No network calls or external web libraries are used by the interface. Voice/photo scanning and phone lock require the Android wrapper. Google Drive is visibly unavailable for new connections until the developer configures authentication; existing configured profiles and their controls remain supported. Notification capture is opt-in and creates reviewable drafts only.
 
 Weekly phone-only copies are erased on uninstall. Export a full CSV or JSON outside the app before uninstalling or clearing app data. A differently signed APK cannot update an existing installation.
+
+## 5.1 appearance and verification
+
+Keeps Salary / Spend / Home / Calendar / Settings. Adds Slate Blue and Soft Silver AMOLED palettes, shared across forms and detail screens. Home has no Spent/Saved summary tiles; the spending breakdown remains. Financial year is expandable; leave counts are compact. Existing themes and version-6 data remain compatible.
+
+Mobile checks now cover both approved accents through actual settings, category use and used-subcategory protection, invalid/valid transfers, budget creation, real CSV/JSON downloads and JSON restore. Native device integrations still require on-device validation; no new Google sign-in setup is bundled.

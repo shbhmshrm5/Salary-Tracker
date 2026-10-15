@@ -335,6 +335,74 @@ function seed() {
       .map((x) => x.textContent);
   });
   assert.deepEqual(result, []);
+  // Exercise both approved palettes through the real Appearance controls.
+  for (const [accent, label] of [["blue", "Slate Blue"], ["silver", "Soft Silver"]]) {
+    await p.evaluate(() => { change(d => d.theme = "amoled"); appearanceScreen(); });
+    await p.getByRole("button", {name: new RegExp(label)}).click();
+    assert.equal(await p.evaluate(() => Salary.getState().uiPreferences.amoledAccent), accent);
+    await p.locator("#panelBack").click();
+    await p.reload();
+    assert.equal(await p.evaluate(() => document.documentElement.dataset.accent), accent);
+    for (const tab of ["salary","spend","home","calendar","settings"]) {
+      await p.evaluate(k => Salary.navigate(k), tab);
+      await p.screenshot({path:`previews/v51-${accent}-${tab}.png`, fullPage:true});
+    }
+    for (const screen of ["categoriesScreen","categoryForm","accountsScreen","transferForm","budgetForm","schedulesScreen","peopleScreen","backupScreen","importExportScreen","captureScreen","voiceSettings","lockScreen","cloudScreen"]) {
+      await p.evaluate(n => window[n](), screen);
+      assert.equal(await p.locator("#panel").evaluate(x=>getComputedStyle(x).backgroundColor), "rgb(0, 0, 0)");
+      assert.equal(await p.locator("#panel").evaluate(x=>x.scrollWidth>x.clientWidth),false, screen);
+      await p.screenshot({path:`previews/v51-${accent}-${screen}.png`,fullPage:true});
+      await p.locator("#panelBack").click();
+    }
+  }
+  // Custom categories are usable, not merely visible in Settings.
+  await p.evaluate(() => Salary.entryForm("expense"));
+  await p.getByRole("button", {name:"Pets",exact:true}).click();
+  await p.getByLabel("Subcategory", {exact:true}).selectOption("Doctor");
+  await p.locator("#amount").fill("75.25");
+  await p.getByRole("button", {name:"Save expense",exact:true}).click();
+  assert((await p.evaluate(()=>Salary.getState())).records.some(r=>r.category==="Pets"&&r.subcategory==="Doctor"&&r.amount===75.25));
+  await p.evaluate(()=>categoryForm("Pets"));
+  await p.getByLabel("Subcategories — one per line").fill("Food");
+  await p.getByRole("button",{name:"Save category",exact:true}).click();
+  assert.match(await p.locator(".form-error").innerText(), /used subcategory cannot be removed/);
+  await p.locator("#panelBack").click();
+  // Same-account transfer is rejected without modifying state.
+  const transferBefore=await p.evaluate(()=>Salary.getState());
+  await p.evaluate(()=>Salary.transferForm());
+  await p.getByLabel("From",{exact:true}).selectOption("h");
+  await p.getByLabel("To",{exact:true}).selectOption("h");
+  await p.getByLabel("Amount (₹)",{exact:true}).fill("100");
+  await p.getByRole("button",{name:"Save transfer",exact:true}).click();
+  assert.match(await p.locator(".form-error").innerText(),/different accounts/);
+  assert.deepEqual(await p.evaluate(()=>Salary.getState()),transferBefore);
+  await p.getByLabel("To",{exact:true}).selectOption("cash");
+  await p.getByRole("button",{name:"Save transfer",exact:true}).click();
+  assert.equal((await p.evaluate(()=>Salary.getState())).transfers.length,transferBefore.transfers.length+1);
+  await p.evaluate(()=>budgetForm());
+  await p.getByLabel("Limit (₹)",{exact:true}).fill("5000");
+  await p.getByRole("button",{name:"Save budget",exact:true}).click();
+  assert.equal((await p.evaluate(()=>Salary.getState())).budgets.at(-1).amount,500000);
+  // Actual browser downloads and JSON restore, with every collection preserved.
+  let exported=await p.evaluate(()=>Salary.getState());
+  for(const kind of ["Csv","Json"]){
+    const [dl]=await Promise.all([p.waitForEvent("download"),p.evaluate(k=>Salary["export"+k](),kind)]);
+    const content=fs.readFileSync(await dl.path(),"utf8");
+    assert(content.length>100);
+    if(kind==="Csv") assert(content.includes("Pets"));
+    else {
+      const restored=JSON.parse(content);delete restored.backupAt;assert.deepEqual(restored,exported);
+      await p.evaluate(text=>Salary.previewJson(text,"test-backup.json"),content);
+      await p.getByRole("button",{name:"Restore this backup",exact:true}).click();
+      exported.backupAt = JSON.parse(content).backupAt;
+      assert.deepEqual(await p.evaluate(()=>Salary.getState()),exported);
+    }
+  }
+  // Malformed import never changes the live ledger.
+  const invalid=await p.evaluate(()=>{try{Salary.previewJson('{broken','bad.json');return false;}catch(e){return true;}});
+  assert(invalid);
+  assert.deepEqual(await p.evaluate(()=>Salary.getState()),exported);
+
   assert.deepEqual(errors, []);
   await b.close();
   console.log(
