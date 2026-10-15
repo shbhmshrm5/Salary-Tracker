@@ -337,11 +337,14 @@ function seed() {
   assert.deepEqual(result, []);
   // Exercise both approved palettes through the real Appearance controls.
   for (const [accent, label] of [["blue", "Slate Blue"], ["silver", "Soft Silver"]]) {
-    await p.evaluate(() => { change(d => d.theme = "amoled"); appearanceScreen(); });
+    await p.evaluate(() => { finish(); appearanceScreen(); });
+    await p.locator("#panel").getByRole("button", {name: /^AMOLED black/}).click();
+    assert.equal(await p.evaluate(() => Salary.getState().theme), "amoled", "theme before accent");
     await p.getByRole("button", {name: new RegExp(label)}).click();
     assert.equal(await p.evaluate(() => Salary.getState().uiPreferences.amoledAccent), accent);
     await p.locator("#panelBack").click();
     await p.reload();
+    assert.equal(await p.evaluate(() => Salary.getState().theme), "amoled", "theme after reload");
     assert.equal(await p.evaluate(() => document.documentElement.dataset.accent), accent);
     for (const tab of ["salary","spend","home","calendar","settings"]) {
       await p.evaluate(k => Salary.navigate(k), tab);
