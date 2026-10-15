@@ -1,4 +1,4 @@
-# Salary Tracker 5.1
+# Money Map 5.2
 
 A rebuilt offline personal-finance app with five main tabs: Salary, Spend, Home, Calendar and Settings. Credit cards and manual investments are sections inside Salary. Calendar includes leave ranges and budgets. Home has account-type summaries, spending breakdown, recent entries and expense/voice actions.
 
@@ -44,3 +44,9 @@ Weekly phone-only copies are erased on uninstall. Export a full CSV or JSON outs
 Keeps Salary / Spend / Home / Calendar / Settings. Adds Slate Blue and Soft Silver AMOLED palettes, shared across forms and detail screens. Home has no Spent/Saved summary tiles; the spending breakdown remains. Financial year is expandable; leave counts are compact. Existing themes and version-6 data remain compatible.
 
 Mobile checks now cover both approved accents through actual settings, category use and used-subcategory protection, invalid/valid transfers, budget creation, real CSV/JSON downloads and JSON restore. Native device integrations still require on-device validation; no new Google sign-in setup is bundled.
+
+## 5.2 Money Map cleanup
+
+Renames the launcher, app help and Android exit prompt to Money Map. Pocket Map is a native vector adaptive wallet icon with a matching Android themed-icon layer. The package ID, database names, localStorage keys, CSV format marker and existing backup filename prefixes intentionally remain compatible with earlier versions.
+
+Removes obsolete v2–v4 DOM tests, duplicate README and superseded design notes; consolidates repeated styles and removes unused state. Current ledger/mobile/native tests remain the verification gates. All three runtime dependencies have active consumers (OCR, scheduled backups, existing Drive profiles), so none were removed.

@@ -1,4 +1,4 @@
-/* Salary Tracker 5.1. Every screen has one implementation; no overrides. */
+/* Money Map 5.2. Every screen has one implementation; no overrides. */
 "use strict";
 const L = Ledger,
   IO = LedgerIO,
@@ -149,11 +149,9 @@ let state = null,
   month = today().slice(0, 7),
   spendCategory = "",
   spendSearch = "",
-  accountFilter = "",
   panelStack = [],
   dirty = false,
   panelSnapshot = "",
-  importText = "",
   scanRequest = null;
 function load() {
   try {
@@ -241,8 +239,7 @@ function monthRecords(kind) {
     (r) =>
       r.date >= from &&
       r.date <= to &&
-      (!kind || L.kind(r.category, state) === kind) &&
-      (!accountFilter || r.accountId === accountFilter),
+      (!kind || L.kind(r.category, state) === kind),
   );
 }
 function total(list) {
@@ -309,7 +306,6 @@ function banner(title, text, action, fn) {
 function navigate(next) {
   if ($("panel").open && !closePanel()) return;
   tab = next;
-  accountFilter = "";
   render();
   window.scrollTo(0, 0);
 }
@@ -4034,7 +4030,7 @@ function previewJson(text, name) {
     d = markUnknown(L.migrate(JSON.parse(text)));
   } catch (e) {
     throw Error(
-      "This JSON is not a valid Salary Tracker backup. " + (e.message || ""),
+      "This JSON is not a valid Money Map backup. " + (e.message || ""),
     );
   }
   openPanel("Restore preview", (body) => {
@@ -4060,7 +4056,6 @@ function previewJson(text, name) {
   });
 }
 function previewCsv(text, name) {
-  importText = text;
   const rows = IO.parse(text);
   if (rows[0]?.includes("Format")) {
     const result = IO.inspect(text, state || L.blank(), uid);
@@ -4172,7 +4167,7 @@ function previewCsv(text, name) {
 }
 function helpScreen() {
   openPanel("Help & app information", (body) => {
-    body.append(el("h2", null, "Salary Tracker 5.1"));
+    body.append(el("h2", null, "Money Map 5.2"));
     for (const [title, text] of [
       [
         "Your data",
@@ -4198,7 +4193,7 @@ function helpScreen() {
         "Safe entry",
         "Voice and payment notifications create drafts. Review before saving.",
       ],
-      ["Build", "5.1 · offline interface · no external web libraries"],
+      ["Build", "5.2 · offline interface · no external web libraries"],
     ])
       body.append(el("h3", null, title), el("p", "info-note", text));
   });
@@ -4236,7 +4231,7 @@ function captureScreen() {
       el(
         "p",
         "info-note",
-        "Optional and off by default. When enabled, Android allows the app to read notifications. Salary Tracker processes payment messages only from the apps you select, stores drafts, and does not fetch your payment history. Nothing is added to your ledger until you review and save it.",
+        "Optional and off by default. When enabled, Android allows the app to read notifications. Money Map processes payment messages only from the apps you select, stores drafts, and does not fetch your payment history. Nothing is added to your ledger until you review and save it.",
       ),
     );
     const label = el("label", "switch-row"),
@@ -4357,7 +4352,7 @@ function voiceSettings() {
       el(
         "p",
         "info-note",
-        "Your phone’s speech service converts audio to text and may use the internet. Salary Tracker does not store audio. Always review the draft before saving.",
+        "Your phone’s speech service converts audio to text and may use the internet. Money Map does not store audio. Always review the draft before saving.",
       ),
     );
     for (const [key, label] of [

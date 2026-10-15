@@ -5,3 +5,8 @@ local.properties
 *.iml
 
 .signing/
+
+# Generated test screenshots and local JS tooling
+previews/
+native-previews/
+node_modules/

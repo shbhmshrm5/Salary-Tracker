@@ -16,7 +16,7 @@ android {
   debug { /* Android's ephemeral local debug key; never distribute as a release. */ }
   release { signingConfig signingConfigs.release }
  }
- defaultConfig { applicationId 'com.shubham.salarytracker'; minSdk 26; targetSdk 35; versionCode 27; versionName '5.1' }
+ defaultConfig { applicationId 'com.shubham.salarytracker'; minSdk 26; targetSdk 35; versionCode 28; versionName '5.2' }
  splits {
   abi {
    enable true
