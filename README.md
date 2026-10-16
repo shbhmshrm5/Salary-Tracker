@@ -1,4 +1,4 @@
-# Money Map 5.3
+# Money Map 5.4
 
 A rebuilt offline personal-finance app with five main tabs: Salary, Spend, Home, Calendar and Settings. Credit cards and manual investments are sections inside Salary. Calendar includes leave ranges and budgets. Home has account-type summaries, spending breakdown, recent entries and expense/voice actions.
 
@@ -50,3 +50,5 @@ Mobile checks now cover both approved accents through actual settings, category 
 Renames the launcher, app help and Android exit prompt to Money Map. Pocket Map is a native vector adaptive wallet icon with a matching Android themed-icon layer. The package ID, database names, localStorage keys, CSV format marker and existing backup filename prefixes intentionally remain compatible with earlier versions.
 
 Removes obsolete v2–v4 DOM tests, duplicate README and superseded design notes; consolidates repeated styles and removes unused state. Current ledger/mobile/native tests remain the verification gates. All three runtime dependencies have active consumers (OCR, scheduled backups, existing Drive profiles), so none were removed.
+
+Soft Silver 5.4: matte charcoal cards on black, a silver balance card and primary actions, and recent entries above spending detail. Existing profiles receive this appearance once; later theme choices remain available. No financial data migration is introduced.

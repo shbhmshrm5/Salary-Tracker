@@ -1,4 +1,4 @@
-/* One token system. AMOLED surfaces are pure black throughout. */
+/* One token system. AMOLED background stays black; Soft Silver uses matte cards. */
 :root {
   color-scheme: light;
   --bg: #f4f5f8;
@@ -52,7 +52,13 @@
 }
 :root[data-theme="amoled"][data-accent="silver"] {
   --accent: #c4cbd2;
-  --accent-soft: #1b1e22;
+  --accent-soft: #252a30;
+  --surface: #15181c;
+  --soft: #20252a;
+  --line: #343a41;
+  --muted: #b5bdc5;
+  --radius: 18px;
+  --shadow: 0 4px 14px #0004;
 }
 :root[data-theme="amoled"][data-accent="blue"],
 :root[data-theme="amoled"][data-accent="silver"] {
@@ -218,6 +224,15 @@ main {
 .hero {
   padding: 13px 14px;
 }
+:root[data-theme="amoled"][data-accent="silver"] .balance-hero {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #101418;
+}
+:root[data-theme="amoled"][data-accent="silver"] .balance-hero .eyebrow,
+:root[data-theme="amoled"][data-accent="silver"] .balance-hero .caption {
+  color: #2d353d;
+}
 .hero .amount {
   font-size: 34px;
   letter-spacing: -1.6px;
@@ -264,7 +279,7 @@ main {
   gap: 10px;
   text-align: left;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
   padding: 12px;
   background: var(--surface);
 }
@@ -651,7 +666,7 @@ main {
   z-index: 3;
 }
 .home-actions .add {
-  border-radius: 17px;
+  border-radius: 28px;
   padding: 0 19px;
   background: var(--accent);
   color: #fff;
@@ -660,7 +675,7 @@ main {
   min-height: 50px;
 }
 .home-actions .mic {
-  border-radius: 17px;
+  border-radius: 50%;
   width: 50px;
   height: 50px;
   background: var(--surface);
@@ -701,6 +716,10 @@ nav button {
 nav button.active {
   color: white;
   background: #242b32;
+}
+:root[data-theme="amoled"][data-accent="silver"] nav button.active {
+  background: var(--accent);
+  color: #101418;
 }
 nav button svg {
   width: 22px;

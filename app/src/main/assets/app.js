@@ -1,4 +1,4 @@
-/* Money Map 5.3. Every screen has one implementation; no overrides. */
+/* Money Map 5.4. Every screen has one implementation; no overrides. */
 "use strict";
 const L = Ledger,
   IO = LedgerIO,
@@ -174,6 +174,16 @@ function load() {
         if (!a.balanceConfirmed) a.needsOpeningBalance = true;
     if (native?.saveData && !raw && !native.saveData(JSON.stringify(d)))
       throw Error("Could not migrate storage");
+    // One-time appearance upgrade; financial collections and storage keys stay intact.
+    if (!d.uiPreferences?.softSilver54) {
+      d.theme = "amoled";
+      d.uiPreferences = { textSize: "comfortable", ...d.uiPreferences,
+        amoledAccent: "silver", softSilver54: true };
+      L.validate(d);
+      if (native?.saveData) {
+        if (!native.saveData(JSON.stringify(d))) throw Error("Could not save appearance");
+      } else localStorage.setItem("salary-v3", JSON.stringify(d));
+    }
     state = d;
   } catch (e) {
     state = null;
@@ -384,7 +394,7 @@ function renderHome(main) {
   const all = state.accounts.filter((a) => !a.archived),
     cash = all.filter((a) => !L.isCard(a)),
     unknown = cash.filter((a) => a.needsOpeningBalance),
-    hero = el("div", "card hero");
+    hero = el("div", "card hero balance-hero");
   hero.append(
     el("div", "eyebrow", "Available balance"),
     el(
@@ -508,7 +518,7 @@ function renderHome(main) {
       ? makeGroup(list.map(activityRow))
       : empty("No entries yet", ""),
   );
-  main.append(rec);
+  main.insertBefore(rec, s);
   const add = button("+ Add expense", () => entryForm("expense"), "add"),
     mic = button("", () => voiceEntry(true), "mic");
   mic.append(icon("mic"));
@@ -3694,7 +3704,7 @@ function applyTheme() {
   document.documentElement.dataset.size =
     state?.uiPreferences?.textSize || "comfortable";
   document.documentElement.dataset.accent =
-    state?.uiPreferences?.amoledAccent || "blue";
+    state?.uiPreferences?.amoledAccent || "silver";
   try {
     localStorage.setItem("salary-theme", theme);
     native?.setTheme?.(theme);
@@ -3715,7 +3725,10 @@ function appearanceScreen() {
           label,
           document.documentElement.dataset.theme === key ? "✓" : "",
           () => {
-            change((d) => (d.theme = key));
+            change((d) => {
+              d.theme = key;
+              d.uiPreferences = { textSize: "comfortable", ...d.uiPreferences, softSilver54: true };
+            });
             finish();
             appearanceScreen();
           },
@@ -3753,7 +3766,7 @@ function appearanceScreen() {
         body.append(
           settingRow(
             label,
-            (state.uiPreferences?.amoledAccent || "blue") === key ? "✓" : "",
+            (state.uiPreferences?.amoledAccent || "silver") === key ? "✓" : "",
             () => {
               change(
                 (d) =>
@@ -3761,6 +3774,7 @@ function appearanceScreen() {
                     textSize: "comfortable",
                     ...d.uiPreferences,
                     amoledAccent: key,
+                    softSilver54: true,
                   }),
               );
               finish();
@@ -4167,7 +4181,7 @@ function previewCsv(text, name) {
 }
 function helpScreen() {
   openPanel("Help & app information", (body) => {
-    body.append(el("h2", null, "Money Map 5.3"));
+    body.append(el("h2", null, "Money Map 5.4"));
     for (const [title, text] of [
       [
         "Your data",
@@ -4193,7 +4207,7 @@ function helpScreen() {
         "Safe entry",
         "Voice and payment notifications create drafts. Review before saving.",
       ],
-      ["Build", "5.3 · offline interface · no external web libraries"],
+      ["Build", "5.4 · offline interface · no external web libraries"],
     ])
       body.append(el("h3", null, title), el("p", "info-note", text));
   });

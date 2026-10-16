@@ -273,7 +273,7 @@ function seed() {
         await p
           .locator(".hero")
           .evaluate((x) => getComputedStyle(x).backgroundColor),
-        "rgb(0, 0, 0)",
+        "rgb(196, 203, 210)",
       );
     await p.screenshot({ path: "previews/v5-theme-" + theme + ".png" });
     await p.evaluate(() => Salary.navigate("salary"));
