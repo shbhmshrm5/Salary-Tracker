@@ -167,3 +167,5 @@ body.v8 .v8-suggest h3{font-size:13px;letter-spacing:.6px;text-transform:upperca
 body.v8 #entrySubcategoryGroup:has(.v7-chips:empty){display:none}
 body.v8 #entrySubcategoryGroup>select{display:none}
 .v8-greeting{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--ink)}
+/* Messages appear at the top so they never cover buttons or charts. */
+body.v8 #status:not(:empty){top:12px;bottom:auto!important;z-index:200;box-shadow:0 6px 20px #0000002e}

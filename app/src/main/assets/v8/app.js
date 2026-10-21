@@ -61,6 +61,7 @@ function v8Recent(){
  return wrap;
 }
 function initV8(){
+ message=function(s){clearTimeout(statusTimer);$('status').textContent=s;statusTimer=setTimeout(()=>{$('status').textContent=''},3000)};
  document.body.classList.add('v8');document.getElementById('v7HomeActions')?.remove();
  const priorRender=render;render=function(){priorRender();if(!state)return;document.body.dataset.page=page;const prior=modernAccount;modernAccount='';try{v8Home()}finally{modernAccount=prior}};
  const priorShow=show;show=function(...args){const result=priorShow(...args);document.body.dataset.page=page;return result};

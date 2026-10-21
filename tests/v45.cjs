@@ -36,6 +36,9 @@ const {chromium}=require('playwright'),assert=require('assert'),path=require('pa
  // Recurring: a payment seen in two months is suggested, and accepting it creates a monthly plan.
  await p.evaluate(()=>{show('more')});await p.locator('#setting-recurring').click();assert((await p.locator('dialog[open] .v8-suggest').innerText()).includes('Netflix · ₹649'));await p.locator('dialog[open] .v8-suggest .setting-item').first().click();await p.getByRole('button',{name:'Save schedule',exact:true}).click();
  assert.equal(await p.evaluate(()=>state.schedules.filter(s=>s.note==='Netflix'&&s.amount===64900&&s.frequency==='monthly'&&s.date>today()).length),1);assert.equal(await p.locator('dialog[open] .v8-suggest').count(),0);await p.evaluate(()=>closeDialogs());
+ // Backups from other app versions restore even with appearance values this version does not know.
+ assert.deepEqual(await p.evaluate(()=>validate({...JSON.parse(JSON.stringify(state)),theme:'tangerine',uiPreferences:{textSize:'huge',amoledAccent:'silver',softSilver54:true}}).uiPreferences),{textSize:'comfortable',amoledAccent:'mint'});
+ await p.evaluate(()=>message('Saved'));const toast=await p.locator('#status').boundingBox();assert(toast.y<100,'message shows at the top');
  // Every tab fits small phones in every theme.
  for(const theme of ['blue','teal','night','amoled'])for(const width of [320,412]){await p.setViewportSize({width,height:800});await p.evaluate(t=>setTheme(t),theme);for(const tab of ['home','expenses','income','calendar','invest','more','entry']){await p.evaluate(t=>t==='entry'?openEntry():show(t),tab);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,theme+' '+width+' '+tab)}}
  assert.deepEqual(errors,[]);await b.close();console.log('PASS v5 number-pad entry, Home/Activity/Leave/Wealth menu, budget in Activity, Wealth SIPs and goal, Home notices, short Settings, recurring suggestions and small screens');
