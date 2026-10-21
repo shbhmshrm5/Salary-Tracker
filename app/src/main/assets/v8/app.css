@@ -86,3 +86,84 @@ html body.v8 nav[data-modern] .modern-home-nav .icon{width:25px;height:25px}
 [data-swatch=night] .v8-theme-swatch{background:linear-gradient(90deg,#16181B 0 62%,#7CC8A4 62%)}
 [data-swatch=amoled] .v8-theme-swatch{background:linear-gradient(90deg,#000 0 62%,#8DE8C1 62%)}
 [data-swatch=auto] .v8-theme-swatch{background:linear-gradient(90deg,#FAF8F4 0 50%,#16181B 50%)}
+
+/* ---------- v5 screens ---------- */
+/* Bottom menu with a raised Add button in the middle. */
+html body.v8 nav[data-modern] .v8-nav-add{color:var(--ink)}
+html body.v8 nav[data-modern] .v8-nav-add .modern-nav-icon{width:50px;height:50px;margin-top:-22px;border-radius:16px;background:var(--ink)!important;color:var(--bg);box-shadow:0 0 0 5px var(--bg)!important}
+html body.v8 nav[data-modern] .v8-nav-add svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round}
+html body.v8 nav[data-modern] .v8-nav-add>span:last-child{margin-top:-2px}
+
+/* Activity: Spent · Income · Invested */
+.v8-activity-tabs{display:flex;gap:4px;background:var(--panel);border-radius:999px;padding:4px;margin:0 0 16px}
+.v8-activity-tabs button{flex:1;min-height:40px;padding:8px 6px;border-radius:999px;background:transparent;color:var(--muted);font-size:14px;font-weight:650}
+.v8-activity-tabs button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px #0000001f}
+body.v8 #expenses>.type-switch,body.v8 #modernSalaryTabs,body.v8 #modernCalendarTabs,body.v8 #expenseAdd,body.v8 .income-button{display:none!important}
+.v8-link-row{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;width:100%;min-height:58px;margin:0 0 10px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;text-align:left;color:var(--ink)}
+.v8-link-row span{font-size:15px;font-weight:650}.v8-link-row small{grid-column:1;font-size:12.5px;color:var(--muted)}.v8-link-row i{grid-row:1/3;grid-column:2;font-style:normal;font-size:20px;color:var(--muted)}
+.v8-text-button{min-height:44px;padding:8px 0;background:transparent;color:var(--accent);font-weight:650;font-size:14px}
+.v8-track{height:6px;border-radius:3px;background:var(--panel);overflow:hidden;margin:8px 0 6px}.v8-track i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.v8-card h2{font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600;letter-spacing:0;margin:0 0 6px}
+.v8-wealth-up .v8-row:last-of-type{border-bottom:0}
+
+/* Home notices */
+.v8-notices{display:flex;flex-direction:column;gap:8px;margin:0 0 18px}
+.v8-notice{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 14px;border-radius:14px;text-align:left;font-size:13.5px}
+.v8-notice span{font-weight:700;white-space:nowrap}
+.v8-notice-backup{background:#FEF3C7;color:#8A4B0B}
+.v8-notice-drafts{background:var(--tint);color:var(--accent)}
+html[data-theme=night] .v8-notice-backup,html[data-theme=amoled] .v8-notice-backup{background:#2A2210;color:#FBBF24}
+
+/* Add entry: amount first, then categories, details, number pad and Save. */
+body.v8 #entry{position:relative;overflow:visible!important;height:auto!important;max-height:none!important}
+body.v8 #entry #typeSwitch{margin-right:54px!important;display:flex;align-items:center;gap:4px;background:var(--panel);border-radius:999px;padding:4px;margin:0 0 6px}
+body.v8 #entry #typeSwitch button{flex:1;min-height:38px;padding:6px 4px;border-radius:999px;background:transparent;color:var(--muted);font-size:13px;font-weight:650;border:0}
+body.v8 #entry #typeSwitch button.selected{background:var(--ink);color:var(--bg)}
+body.v8 #entry .voice-entry-button{position:absolute;top:0;right:0;width:44px;height:44px;min-height:44px;padding:0;border-radius:50%;font-size:0;background:var(--surface);border:1px solid var(--border);color:var(--accent);display:grid;place-items:center;z-index:2}
+body.v8 #entry .voice-entry-button svg,body.v8 #entry .voice-entry-button .icon{width:20px;height:20px}
+body.v8 #form .entry-panel{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;background:transparent!important;border:0!important;box-shadow:none!important;padding:14px 0 6px!important;margin:0}
+body.v8 #form .entry-panel>label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.v8 #form .entry-panel .v7-rupee{display:inline;position:static;font-family:Fraunces,Georgia,serif;font-size:34px;color:var(--muted);margin-right:4px;transform:none}
+body.v8 #form #amount{field-sizing:content;width:auto;min-width:1.2ch;max-width:290px;background:transparent!important;border:0!important;box-shadow:none!important;text-align:center;font-family:Fraunces,Georgia,serif;font-weight:600;font-size:60px;line-height:1.1;min-height:72px;padding:0;color:var(--ink);caret-color:var(--accent)}
+body.v8 #form #amount::placeholder{color:var(--muted);opacity:.45}
+body.v8 #form #note{flex-basis:100%;width:100%;text-align:center;background:transparent!important;border:0!important;box-shadow:none!important;font-size:15px;color:var(--ink);min-height:40px;padding:6px}
+body.v8 #form #note::placeholder{color:var(--muted)}
+body.v8 #modernEntryGrid{display:flex;flex-direction:column;gap:10px;margin:8px 0 0}
+body.v8 #modernEntryGrid .modern-entry-tile{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+body.v8 #modernEntryGrid .modern-entry-tile>label{font-size:12px;font-weight:650;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+body.v8 #categories.v7-category-grid{display:flex!important;flex-wrap:wrap;gap:8px;justify-content:flex-start}
+body.v8 #categories.v7-category-grid button{display:flex!important;flex-direction:row!important;align-items:center;gap:6px;width:auto!important;min-height:40px!important;padding:8px 12px!important;border-radius:999px!important;background:var(--surface)!important;border:1px solid var(--border)!important;color:var(--ink)!important;font-size:13.5px;font-weight:600}
+body.v8 #categories.v7-category-grid button .v7-category-icon{width:18px;height:18px;background:none!important;border:0!important;color:inherit}
+body.v8 #categories.v7-category-grid button .v7-category-icon svg,body.v8 #categories.v7-category-grid button .v7-category-icon .icon{width:17px;height:17px}
+body.v8 #categories.v7-category-grid button.selected{background:var(--tint)!important;border-color:var(--accent)!important;color:var(--accent)!important}
+body.v8 #moreCategories{min-height:40px;padding:8px 14px;border-radius:999px;background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:13px;margin-top:8px;width:auto}
+body.v8 .v8-entry-meta{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+body.v8 .v8-entry-meta .modern-entry-tile{grid-column:auto!important;width:auto!important;padding:8px 8px 8px 0!important;min-width:0}
+body.v8 .v8-entry-meta .modern-entry-tile+.modern-entry-tile{border-left:1px solid var(--border)!important;padding-left:10px!important}
+body.v8 .v8-entry-meta label{font-size:11.5px!important;letter-spacing:.4px!important;text-transform:none!important;margin:0!important;display:block}
+body.v8 .v8-entry-meta select,body.v8 .v8-entry-meta input{min-height:34px;padding:2px 0;background:transparent!important;border:0!important;box-shadow:none!important;font-size:14px;font-weight:600;color:var(--ink);width:100%}
+body.v8 .v8-entry-meta #otherPayerFields{grid-column:1/-1}
+body.v8 .v8-entry-meta #entryAccountHint:empty{display:none}
+body.v8 .v8-entry-meta #entryAccountHint{font-size:11.5px;margin:2px 0 0}
+body.v8 .v8-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin:6px 0 4px}
+body.v8 .v8-key{min-height:50px;background:transparent;border:0;border-radius:12px;font-size:24px;font-weight:500;color:var(--ink);display:grid;place-items:center}
+body.v8 .v8-key:active{background:var(--panel)}
+body.v8 .v8-key svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+body.v8 .v8-entry-more{margin:2px 0 8px;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;font-size:13.5px;color:var(--muted)}
+body.v8 .v8-entry-more summary{min-height:40px;display:flex;align-items:center;cursor:pointer;font-weight:600}
+body.v8 .v8-entry-more .category-tools{display:flex;gap:12px}
+body.v8 #form .form-actions{position:sticky;bottom:0;padding:8px 0 10px;background:var(--bg);margin:0}
+body.v8 #form .form-actions .primary{background:var(--ink);color:var(--bg);border-radius:16px;min-height:54px;font-size:16px;font-weight:700}
+body.v8 #form .form-actions .primary:disabled{opacity:.35}
+body.v8 #form .form-actions .v8-cancel{display:none}
+
+/* Shared Paper look for the remaining screens */
+body.v8 .primary{background:var(--ink);color:var(--bg)}
+body.v8 .card,body.v8 .modern-hero,body.v8 .summary,body.v8 .v7-invest-hero{border-radius:20px}
+body.v8 .modern-hero strong,body.v8 .summary strong,body.v8 .v7-invest-hero strong{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.3px}
+body.v8 .modern-day{font-size:11.5px;font-weight:650;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+body.v8 .v8-suggest{margin:6px 0 14px}
+body.v8 .v8-suggest h3{font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:10px 0 6px}
+body.v8 #entrySubcategoryGroup:has(.v7-chips:empty){display:none}
+body.v8 #entrySubcategoryGroup>select{display:none}
+.v8-greeting{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--ink)}

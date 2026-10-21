@@ -1,7 +1,7 @@
 // v5 "Paper" design: four themes plus Auto, and a Home built around available money and where it was spent.
 // Ledger reads and writes still go through the existing helpers; older Home elements stay hidden for compatibility.
 const v8Themes={blue:{label:'Paper',note:'Light · cream and green',dark:false,bar:'#FAF8F4'},teal:{label:'Ocean',note:'Light · cool blue',dark:false,bar:'#F5F7FB'},night:{label:'Night',note:'Dark · soft charcoal',dark:true,bar:'#16181B'},amoled:{label:'AMOLED',note:'Dark · pure black',dark:true,bar:'#000000'}};
-const v8Palettes={blue:['#1E5B45','#D08A55','#7F9BC0','#C9AE6E','#9C7CB0','#B9B4A9'],teal:['#2F55D4','#E0915C','#3FA389','#C9A33E','#9C7CB0','#B8BFCC'],night:['#7CC8A4','#F0A07A','#8DB4F0','#E3C77A','#C3A0E0','#5E636B'],amoled:['var(--accent)','#F0A07A','#8DB4F0','#E3C77A','#C3A0E0','#4A4F57']};
+const v8Palettes={blue:['#1E5B45','#D08A55','#7F9BC0','#C9AE6E','#9C7CB0','#B9B4A9'],teal:['#2F55D4','#E0915C','#3FA389','#C9A33E','#9C7CB0','#B8BFCC'],night:['#7CC8A4','#F0A07A','#8DB4F0','#E3C77A','#C3A0E0','#5E636B'],amoled:['#8DE8C1','#61B795','#397F64','#244D3E','#B7F2D9','#1C3329']};
 let v8HomeView='category';
 function v8SystemDark(){try{if(window.Android&&typeof Android.isSystemDark==='function')return !!Android.isSystemDark()}catch{}try{return matchMedia('(prefers-color-scheme: dark)').matches}catch{return false}}
 function v8ThemeChoice(){try{return localStorage.getItem('salary-theme')||'blue'}catch{return 'blue'}}
@@ -19,10 +19,7 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if
 modernAppearance=function(){
  const d=workflowDialog('Appearance'),choice=v8ThemeChoice(),grid=node('div','v8-theme-grid');
  for(const [key,t] of [...Object.entries(v8Themes),['auto',{label:'Auto',note:'Follows your phone'}]]){const b=action('',()=>{setTheme(key);modernAppearance()});b.className='v8-theme-choice';b.dataset.swatch=key;b.setAttribute('aria-pressed',String(choice===key));const sw=node('span','v8-theme-swatch');sw.setAttribute('aria-hidden','true');b.append(sw,node('strong',null,t.label),node('small',null,t.note));grid.append(b)}
- d.append(grid);
- // AMOLED keeps its accent colours until Settings is simplified.
- if(document.documentElement.dataset.theme==='amoled'){const section=node('div','v7-accent-section'),choices=node('div','v7-accent-choices');section.append(node('h3',null,'AMOLED accent'),choices);for(const [key,a] of Object.entries(v7Accents)){const b=action('',()=>{if(update({uiPreferences:{textSize:'comfortable',...state.uiPreferences,amoledAccent:key}})){render();modernAppearance()}});b.className='v7-accent-choice';b.setAttribute('aria-pressed',String((state.uiPreferences?.amoledAccent||'mint')===key));const swatch=node('span','v7-accent-swatch');swatch.style.background=a.color;b.append(swatch,node('span',null,a.label));choices.append(b)}d.append(section)}
- d.append(node('h3',null,'Text size'));for(const [key,label] of [['compact','Compact'],['comfortable','Comfortable'],['large','Large']])d.append(settingsLink(label,(state.uiPreferences?.textSize||'comfortable')===key?'Selected':'',()=>{if(update({uiPreferences:{...state.uiPreferences,textSize:key}})){render();modernAppearance()}},'settings'));
+ d.append(grid,node('p','v8-sub','Text size follows your phone’s display settings.'));
 };
 settingsOriginals.settingsAppearance=modernAppearance;
 function v8PeriodLabel(){if(reportMode==='month'){const [y,m]=$('month').value.split('-').map(Number);if(y&&m)return new Date(y,m-1,1).toLocaleString('en-IN',{month:'long',year:'numeric'})}return reportRange().label}
@@ -32,11 +29,11 @@ function v8Home(){
  let el=$('v8Home');if(!el){el=node('div');el.id='v8Home';$('home').prepend(el)}el.replaceChildren();
  const live=state.accounts.filter(a=>!a.archived),liquid=live.filter(a=>!isCard(a)),wallet=a=>['Google Pay','CRED','PhonePe','Other wallet'].includes(a.bank),sum=arr=>arr.reduce((n,a)=>n+cents(balance(a)),0),dues=live.filter(isCard).reduce((n,a)=>n+Math.max(0,-cents(balance(a))),0),available=sum(liquid)-dues;
  // Available money: everything in bank, cash and wallets minus what is owed on credit cards.
- const hero=node('div','v8-hero');hero.append(node('small','v8-eyebrow','Available to spend'));const big=node('strong','v8-big',(available<0?'−':'')+money(Math.abs(available)/100));big.id='v8Available';hero.append(big);
+ const hero=node('div','v8-hero'),first=state.profile?.name?.trim().split(/\s+/)[0];if(first)hero.append(node('p','v8-greeting','Hi, '+first));hero.append(node('small','v8-eyebrow','Available to spend'));const big=node('strong','v8-big',(available<0?'−':'')+money(Math.abs(available)/100));big.id='v8Available';hero.append(big);
  const salary=state.records.filter(r=>r.category==='Salary'&&r.date<=today()).sort((a,b)=>b.date.localeCompare(a.date))[0],notes=[];if(dues)notes.push('After '+money(dues/100)+' card dues');if(salary)notes.push('salary '+money(salary.amount)+' on '+v8Short(salary.date));
  if(notes.length){const sub=node('p','v8-sub',notes.join(' · '));sub.textContent=sub.textContent.charAt(0).toUpperCase()+sub.textContent.slice(1);hero.append(sub)}
  el.append(hero);
- const tiles=node('div','v8-accounts');for(const [label,value,go] of [['Bank',sum(liquid.filter(a=>a.bank!=='Cash'&&!wallet(a))),()=>{v7AccountType='Bank accounts';show('accounts')}],['Cash & wallets',sum(liquid.filter(a=>a.bank==='Cash'||wallet(a))),()=>{v7AccountType='';show('accounts')}],['Cards due',dues,()=>{salaryPanel='cards';show('income')}]]){const b=action('',go);b.className='v8-tile';b.append(node('small',null,label),node('strong',null,money(value/100)));tiles.append(b)}
+ const tiles=node('div','v8-accounts');for(const [label,value,go] of [['Bank',sum(liquid.filter(a=>a.bank!=='Cash'&&!wallet(a))),()=>{v7AccountType='Bank accounts';show('accounts')}],['Cash & wallets',sum(liquid.filter(a=>a.bank==='Cash'||wallet(a))),()=>{v7AccountType='';show('accounts')}],['Cards due',dues,()=>openCards()]]){const b=action('',go);b.className='v8-tile';b.append(node('small',null,label),node('strong',null,money(value/100)));tiles.append(b)}
  el.append(tiles);if(!live.length){const add=action('+ Add your bank, cash or wallet',()=>openAccount());add.className='v8-empty-action';el.append(add)}
  el.append(v8SpendCard(),v8Recent());
 }
@@ -67,5 +64,5 @@ function initV8(){
  document.body.classList.add('v8');document.getElementById('v7HomeActions')?.remove();
  const priorRender=render;render=function(){priorRender();if(!state)return;document.body.dataset.page=page;const prior=modernAccount;modernAccount='';try{v8Home()}finally{modernAccount=prior}};
  const priorShow=show;show=function(...args){const result=priorShow(...args);document.body.dataset.page=page;return result};
- setTheme(v8ThemeChoice(),false);render();
+ initV8Screens();setTheme(v8ThemeChoice(),false);render();
 }

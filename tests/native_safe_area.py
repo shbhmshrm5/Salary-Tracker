@@ -34,7 +34,7 @@ def tap_text(text):
         for item in candidates:
             x1,y1,x2,y2=bounds(item)
             # WebView exposes rows underneath the fixed navigation bar; scroll before tapping.
-            if text not in ['Home','Income','Expenses','Calendar','Settings'] and (y1+y2)//2>=nav_top:
+            if text not in ['Home','Activity','Leave','Wealth','Settings'] and (y1+y2)//2>=nav_top:
                 continue
             if x2>x1 and y2>y1:
                 adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
@@ -66,10 +66,10 @@ print(adb('shell','am','start','-W','-n','com.shubham.salarytracker/.MainActivit
 time.sleep(15)
 verify('light-home')
 try:
-    tap_text('Calendar')
+    tap_text('Leave')
     adb('shell','input','keyevent','4')
     time.sleep(2)
-    verify('back-from-calendar')
+    verify('back-from-leave')
     tap_text('Tools and settings')
     tap_text('Settings')
     tap_text('Appearance')
