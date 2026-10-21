@@ -31,7 +31,9 @@ public class MainActivity extends Activity {
   WindowInsets handled=insets.consumeSystemWindowInsets();
   return Build.VERSION.SDK_INT>=28?handled.consumeDisplayCutout():handled;
  });
- setContentView(safeArea);safeArea.requestApplyInsets();
+ setContentView(safeArea);
+ // Paint system bars with the last theme before the page loads, so a light theme never starts with a black strip.
+ applyTheme(getSharedPreferences("ui",0).getString("theme","blue"));
  if(Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,this::handleAppBack);
  web.getSettings().setJavaScriptEnabled(true);web.getSettings().setDomStorageEnabled(true);web.getSettings().setAllowFileAccess(true);web.getSettings().setAllowFileAccessFromFileURLs(false);web.getSettings().setAllowUniversalAccessFromFileURLs(false);
  web.setWebViewClient(new WebViewClient(){public void onPageFinished(WebView view,String url){if(pendingVoiceText!=null)sendVoiceResult(pendingVoiceText,pendingVoiceError);deliverSharedText();}public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){return !request.getUrl().toString().equals("file:///android_asset/index.html");}});
@@ -62,14 +64,18 @@ public class MainActivity extends Activity {
  @JavascriptInterface public String loadRecoveryData(){try{return new String(new android.util.AtomicFile(new java.io.File(getFilesDir(),"before-restore"+profileNamespace+".json")).readFully(),StandardCharsets.UTF_8);}catch(Exception e){return "";}}
  @JavascriptInterface public String loadData(){try{synchronized(DriveSync.LOCK){bridgeNamespace=profileNamespace;return ledger.load();}}catch(Exception e){return "DATABASE_ERROR";}}
  @JavascriptInterface public boolean saveData(String data){try{synchronized(DriveSync.LOCK){if(!profileNamespace.equals(bridgeNamespace))return false;ledger.save(data);}runOnUiThread(()->drive.changed());return true;}catch(Exception e){return false;}}
-@JavascriptInterface public void setTheme(String name){runOnUiThread(()->{boolean light=!"amoled".equals(name);darkMode=!light;int bg=android.graphics.Color.parseColor("amoled".equals(name)?"#000000":"teal".equals(name)?"#F3F8F8":"#F6F8FC");web.setBackgroundColor(bg);safeArea.setBackgroundColor(bg);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);if(Build.VERSION.SDK_INT>=30){
+@JavascriptInterface public void setTheme(String name){runOnUiThread(()->{getSharedPreferences("ui",0).edit().putString("theme",name).apply();applyTheme(name);});}
+@JavascriptInterface public boolean isSystemDark(){return (getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES;}
+@JavascriptInterface public void exportFile(String name,String data,String mime){runOnUiThread(()->{if(exportText!=null){Toast.makeText(MainActivity.this,"Finish the current export first",Toast.LENGTH_SHORT).show();return;}exportName=name;exportText=data;Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType(mime);i.putExtra(Intent.EXTRA_TITLE,name);startActivityForResult(i,13);});}},"Android");web.loadUrl("file:///android_asset/index.html");captureSharedText(getIntent());}
+ // Must match the page colour of each theme in v8/app.css; the strip under the menu shows this colour.
+private void applyTheme(String name){boolean light=!"amoled".equals(name)&&!"night".equals(name);darkMode=!light;int bg=Color.parseColor("amoled".equals(name)?"#000000":"night".equals(name)?"#16181B":"teal".equals(name)?"#F5F7FB":"#FAF8F4");web.setBackgroundColor(bg);safeArea.setBackgroundColor(bg);getWindow().getDecorView().setBackgroundColor(bg);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);if(Build.VERSION.SDK_INT>=30){
  WindowInsetsController controller=getWindow().getInsetsController();
  int appearance=WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS|WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
  if(controller!=null)controller.setSystemBarsAppearance(light?appearance:0,appearance);
  }else{
  int layout=View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
  getWindow().getDecorView().setSystemUiVisibility(layout|(light?(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR):0));
- }safeArea.requestApplyInsets();});}@JavascriptInterface public void exportFile(String name,String data,String mime){runOnUiThread(()->{if(exportText!=null){Toast.makeText(MainActivity.this,"Finish the current export first",Toast.LENGTH_SHORT).show();return;}exportName=name;exportText=data;Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType(mime);i.putExtra(Intent.EXTRA_TITLE,name);startActivityForResult(i,13);});}},"Android");web.loadUrl("file:///android_asset/index.html");captureSharedText(getIntent());}
+ }safeArea.requestApplyInsets();}
  private boolean voicePending=false; private String pendingVoiceText,pendingVoiceError;
  private void launchVoice(String language){
   if(voicePending)return;

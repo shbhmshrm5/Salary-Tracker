@@ -1,0 +1,2 @@
+Fraunces (variable, latin subset, embedded in fraunces.css): https://fonts.google.com/specimen/Fraunces via Google Fonts. SIL Open Font License 1.1, see LICENSE-Fraunces.txt.
+Used for large money figures; the rupee sign falls back to the system font.

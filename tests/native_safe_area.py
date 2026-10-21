@@ -73,7 +73,7 @@ try:
     tap_text('Tools and settings')
     tap_text('Settings')
     tap_text('Appearance')
-    tap_text('AMOLED black')
+    tap_text('AMOLED')
     adb('shell','input','keyevent','4')
     time.sleep(2)
     tap_text('Home')
