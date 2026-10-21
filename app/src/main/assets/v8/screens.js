@@ -105,6 +105,10 @@ function v8ScheduleFrom(r){const d=new Date(r.date+'T12:00:00');d.setMonth(d.get
 function initV8Screens(){
  v8EntryLayout();v8Nav();v8Settings();
  const schedules=settingsOriginals.openSchedules;settingsOriginals.openSchedules=function(){schedules();const d=[...document.querySelectorAll('dialog[open]')].at(-1),ideas=v8RecurringSuggestions();if(!d||!ideas.length)return;const box=node('div','v8-suggest');box.append(node('h3',null,'Looks like it repeats'));for(const r of ideas)box.append(settingsLink((r.note||r.category)+' · '+money(r.amount),'Make recurring',()=>v8ScheduleFrom(r),'calendar','purple'));d.querySelector('.notice')?.after(box)};
+ // Google Drive: offer sign-in on the phone; Google rejects it until the app is registered (docs/GOOGLE_DRIVE_SETUP.md).
+ const cloud=settingsOriginals.openCloud;settingsOriginals.openCloud=function(){cloud();const d=[...document.querySelectorAll('dialog[open]')].at(-1),status=$('cloudStatus');if(!d||!status||!window.Android?.connectDrive)return;let current='';try{current=String(Android.cloudStatus?.()||'')}catch{}if(current.startsWith('Connected:'))return;
+  status.textContent='Not connected';const note=status.nextElementSibling;if(note)note.textContent='Sign in with Google to keep your records in your Google account and restore them on a new phone. Save a backup file first.';
+  const connect=action('Connect Google account',()=>Android.connectDrive());connect.className='primary';connect.id='connectGoogle';(note||status).after(connect)};
  // AMOLED uses its mint accent; text follows the phone's own size setting.
  v7ApplyAccent=function(){const root=document.documentElement,a=v7Accents.mint;root.dataset.amoledAccent='mint';root.style.setProperty('--amoled-accent',a.color);root.style.setProperty('--amoled-tint',a.tint);if(root.dataset.theme==='amoled')palette=a.palette};
  const titles={expenses:'Activity',income:'Activity',calendar:'Leave',invest:'Wealth'};
