@@ -26,11 +26,18 @@ function v8KeypadPress(key){
 /* ---------- Menu: Home · Activity · + · Leave · Wealth ---------- */
 function v8Nav(){
  const nav=document.querySelector('nav[data-modern]');nav.replaceChildren();
- for(const [id,label,glyph,go] of [['home','Home','home',()=>show('home')],['expenses','Activity','Bills',()=>{expenseView='expense';categoryFilter=null;show('expenses')}],['calendar','Leave','calendar',()=>{calendarPanel='leave';show('calendar')}],['invest','Wealth','Investments',()=>show('invest')]]){
-  const b=action('',go);b.setAttribute('aria-label',id==='add'?'Add entry':label);const mark=node('span','modern-nav-icon');
+ for(const [id,label,glyph,go] of [['home','Home','home',()=>show('home')],['expenses','Activity','Bills',()=>{expenseView='expense';categoryFilter=null;show('expenses')}],['add','Add','',v8AddHere],['calendar','Leave','calendar',()=>{calendarPanel='leave';show('calendar')}],['invest','Wealth','Investments',()=>show('invest')]]){
+  const b=action('',go);b.setAttribute('aria-label',id==='add'?'Add expense (hold for voice)':label);const mark=node('span','modern-nav-icon');
   if(id==='add'){b.className='v8-nav-add';b.removeAttribute('data-page');mark.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'}else{b.dataset.page=id;mark.innerHTML=icon(glyph)}
+  if(id==='add')v8LongPress(b,()=>openVoice());
   b.append(mark,node('span',null,label));nav.append(b)}
 }
+// One tap on Add opens what the page is about: leave on Leave, an investment on Wealth, otherwise an expense.
+function v8AddHere(){if(page==='calendar')openLeave();else if(page==='invest')openEntry(null,'SIP');else openEntry()}
+// Holding Add starts voice entry; the click that follows a long press is ignored.
+function v8LongPress(el,fn){let timer=0,fired=false;const cancel=()=>clearTimeout(timer);
+ el.addEventListener('pointerdown',()=>{fired=false;timer=setTimeout(()=>{fired=true;fn()},550)});for(const t of ['pointerup','pointerleave','pointercancel'])el.addEventListener(t,cancel);
+ el.addEventListener('click',e=>{if(fired){e.stopImmediatePropagation();e.preventDefault();fired=false}},true);el.addEventListener('contextmenu',e=>e.preventDefault())}
 function v8ActivityTabs(){
  const current=page==='income'?'income':expenseView==='aside'?'aside':'expense',d=node('div','v8-activity-tabs');d.setAttribute('role','group');d.setAttribute('aria-label','Activity type');
  for(const [key,label] of [['expense','Spent'],['income','Income'],['aside','Invested']]){const b=action(label,()=>{if(key==='income'){salaryPanel='salary';show('income')}else{expenseView=key;categoryFilter=null;show('expenses')}});b.setAttribute('aria-pressed',String(current===key));d.append(b)}
@@ -103,12 +110,6 @@ function v8RecurringSuggestions(){
 function v8ScheduleFrom(r){const d=new Date(r.date+'T12:00:00');d.setMonth(d.getMonth()+1);while(d.toISOString().slice(0,10)<=today())d.setMonth(d.getMonth()+1);const next=d.toISOString().slice(0,10);editSchedule({note:r.note||r.category,category:r.category,subcategory:r.subcategory||'',amount:cents(r.amount),accountId:r.accountId||state.defaultAccount,date:next,anchor:Number(r.date.slice(-2)),frequency:'monthly'})}
 
 /* ---------- Floating Add expense (most used action) and Google account card ---------- */
-function v8Fab(){
- const dock=node('div','v8-fab');dock.id='v8Fab';dock.setAttribute('role','group');dock.setAttribute('aria-label','Quick add');
- const add=action('',()=>openEntry());add.className='v8-fab-add';add.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add expense</span>';
- const mic=action('',()=>openVoice());mic.className='v8-fab-mic';mic.innerHTML=MIC;mic.setAttribute('aria-label','Add expense by voice');
- dock.append(add,mic);document.body.append(dock);
-}
 function v8GoogleCard(){
  const card=$('v8GoogleCard');if(!card)return;card.replaceChildren();let current='';try{current=String(window.Android?.cloudStatus?.()||'')}catch{}
  const connected=current.startsWith('Connected:'),text=node('span','v8-google-text');
@@ -117,7 +118,7 @@ function v8GoogleCard(){
  card.append(node('span','v8-google-mark','G'),text,btn);
 }
 function initV8Screens(){
- v8EntryLayout();v8Nav();v8Settings();v8Fab();
+ v8EntryLayout();v8Nav();v8Settings();
  const google=node('section','v8-google');google.id='v8GoogleCard';document.querySelector('#more .settings-profile')?.after(google);
  const schedules=settingsOriginals.openSchedules;settingsOriginals.openSchedules=function(){schedules();const d=[...document.querySelectorAll('dialog[open]')].at(-1),ideas=v8RecurringSuggestions();if(!d||!ideas.length)return;const box=node('div','v8-suggest');box.append(node('h3',null,'Looks like it repeats'));for(const r of ideas)box.append(settingsLink((r.note||r.category)+' · '+money(r.amount),'Make recurring',()=>v8ScheduleFrom(r),'calendar','purple'));d.querySelector('.notice')?.after(box)};
  // Google Drive: offer sign-in on the phone; Google rejects it until the app is registered (docs/GOOGLE_DRIVE_SETUP.md).
@@ -129,7 +130,7 @@ function initV8Screens(){
  const titles={expenses:'Activity',income:'Activity',calendar:'Leave',invest:'Wealth'};
  const priorRender=render;render=function(){priorRender();if(!state)return;document.documentElement.dataset.textSize='comfortable';
   if(calendarPanel==='budget')calendarPanel='leave';if(titles[page])$('pageTitle').textContent=titles[page];
-  $('modernHeaderAdd').classList.toggle('hidden',!['calendar','invest'].includes(page));
+  $('modernHeaderAdd').classList.add('hidden');
   const target=['income','insights'].includes(page)?'expenses':page==='leaveEntry'?'calendar':page==='entry'?entryReturn==='income'?'expenses':entryReturn:page;for(const b of document.querySelectorAll('nav[data-modern] button[data-page]')){const on=b.dataset.page===target;b.classList.toggle('active',on);b.setAttribute('aria-current',on?'page':'false')}
   for(const id of ['expenseLabel','incomePeriodLabel']){const el=$(id);if(el)el.textContent=el.textContent.replace(/\d{4}-\d{2}(?!-)/,v8PeriodLabel())}
   v8Activity();v8Wealth();v8HomeNotices();v8AccountsPage();v8SettingsValues();v8GoogleCard()};

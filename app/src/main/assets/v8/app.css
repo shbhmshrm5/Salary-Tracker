@@ -170,19 +170,9 @@ body.v8 #entrySubcategoryGroup>select{display:none}
 /* Messages appear at the top so they never cover buttons or charts. */
 body.v8 #status:not(:empty){top:12px;bottom:auto!important;z-index:200;box-shadow:0 6px 20px #0000002e}
 
-/* Floating Add expense on Home and Activity; pages keep room below so nothing is hidden. */
-.v8-fab{display:none}
-body.v8[data-page=home] .v8-fab,body.v8[data-page=expenses] .v8-fab,body.v8[data-page=income] .v8-fab{display:flex;position:fixed;right:max(16px,calc(50% - 224px));bottom:calc(92px + env(safe-area-inset-bottom));gap:10px;align-items:center;z-index:25}
-body.v8:has(dialog[open]) .v8-fab{display:none}
-.v8-fab-add{display:flex;align-items:center;gap:8px;min-height:54px;padding:0 20px 0 16px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:15.5px;font-weight:700;box-shadow:0 8px 22px #00000038}
-.v8-fab-add svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
-.v8-fab-mic{width:54px;height:54px;min-height:54px;padding:0;border-radius:50%;background:var(--surface);color:var(--accent);border:1px solid var(--border);display:grid;place-items:center;box-shadow:0 8px 22px #00000026}
-.v8-fab-mic svg,.v8-fab-mic .icon{width:22px;height:22px}
-body.v8[data-page=home] main,body.v8[data-page=expenses] main,body.v8[data-page=income] main{padding-bottom:190px}
 /* Google account card at the top of Settings */
 .v8-google{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:18px}
 .v8-google:empty{display:none}
 .v8-google-mark{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:800 19px Inter,sans-serif;color:#4285F4;background:var(--panel)}
 .v8-google-text{flex:1;min-width:0;display:flex;flex-direction:column}.v8-google-text strong{font-size:14.5px}.v8-google-text small{font-size:12px;color:var(--muted);line-height:1.35}
 .v8-google .primary{width:auto;min-height:44px;padding:8px 14px;border-radius:12px;font-size:13.5px;white-space:nowrap}
-html body.v8 nav[data-modern]{grid-template-columns:repeat(4,minmax(0,1fr))}
