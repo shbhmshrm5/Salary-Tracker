@@ -41,11 +41,7 @@ public class MainActivity extends Activity {
  @JavascriptInterface public String pendingSync(){return DriveSync.readPending(MainActivity.this);}
  @JavascriptInterface public boolean applyPendingSync(String ticket,String data){boolean ok=DriveSync.apply(MainActivity.this,ticket,data);if(ok)runOnUiThread(()->drive.changed());return ok;}
  @JavascriptInterface public void resolveSyncLocal(){runOnUiThread(()->drive.run("resolve",true));}
- @JavascriptInterface public String paymentDrafts(){return PaymentDrafts.read(MainActivity.this).optJSONArray("drafts").toString();}
- @JavascriptInterface public String paymentSettings(){try{return PaymentDrafts.settings(MainActivity.this);}catch(Exception e){return "{}";}}
- @JavascriptInterface public void configurePayments(boolean enabled,String apps){try{org.json.JSONArray chosen=new org.json.JSONArray(apps);android.content.SharedPreferences.Editor prefs=getSharedPreferences("payments",0).edit().putBoolean("enabled-"+PaymentDrafts.profile(MainActivity.this),enabled);for(String pkg:PaymentDrafts.APPS.keySet()){boolean selected=false;for(int i=0;i<chosen.length();i++)if(pkg.equals(chosen.getString(i)))selected=true;prefs.putBoolean("app-"+PaymentDrafts.profile(MainActivity.this)+"-"+pkg,selected);}prefs.apply();if(enabled)runOnUiThread(()->startActivity(new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)));}catch(Exception ignored){}}
- @JavascriptInterface public boolean dismissPaymentDraft(String id){try{PaymentDrafts.dismiss(MainActivity.this,id);return true;}catch(Exception e){return false;}}
- @JavascriptInterface public String cloudStatus(){return drive.status();}
+     @JavascriptInterface public String cloudStatus(){return drive.status();}
  @JavascriptInterface public void connectDrive(){runOnUiThread(()->startActivityForResult(android.accounts.AccountManager.newChooseAccountIntent(null,null,new String[]{"com.google"},"Choose your personal Google Drive account",null,null,null),19));}
  @JavascriptInterface public void backupDrive(){runOnUiThread(()->drive.run("backup",true));}
  @JavascriptInterface public void listDriveBackups(){runOnUiThread(()->drive.run("list",true));}

@@ -20,13 +20,9 @@ The APK implements Google account authorization through Google Play services Aut
 - Work stops when disconnected. Tokens stay in memory and are reacquired through Play services. No token, payment text, or ledger is logged.
 - Live Google consent, Drive authorization and cross-device integration still require the app owner's Google Cloud configuration and real-account testing. CI exercises merge rules, branch detection, profile isolation, validation and Android compilation.
 
-## Notification drafts
+## Payment receipts
 
-Settings → Payment inbox → Notification settings. Select Google Pay, PhonePe, CRED and/or Paytm, then grant Salary notification access in Android. Capture is opt-in per profile and is reset when connecting a Google profile. Turn it off from the same screen or revoke Android notification access.
-
-Only new readable payment notifications from selected supported packages are considered. OTP/password messages, failed/pending/request notifications and notification group summaries are ignored. Hindi-only notifications, unavailable notifications and formats the parser cannot recognize may be missed. No past payment history is accessed. Reference matches suppress duplicate drafts; uncertain amount/time matches are flagged for manual review. An inbox holds up to 500 drafts, which remain on the device until a reviewed transaction is saved.
-
-You can also share **text** receipts to Salary. Image/PDF OCR is not implemented. Credit-card bill, transfer and refund notifications route to the matching workflow rather than being silently recorded as expenses.
+Automatic reading of payment notifications was removed in Money Map 5.9: Android blocks installs of apps from outside the Play Store that ask for notification access. You can still paste or share a receipt text to Money Map (Settings → Voice & receipts) and review the draft before saving.
 
 ## Backups
 

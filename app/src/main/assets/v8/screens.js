@@ -66,8 +66,7 @@ function v8Wealth(){
 /* ---------- Home extras: payments waiting for review, and a backup reminder ---------- */
 function v8HomeNotices(){
  const home=$('v8Home');if(!home)return;const holder=node('div','v8-notices');
- let drafts=[];try{drafts=window.Android?.paymentDrafts?JSON.parse(Android.paymentDrafts()):[]}catch{}
- if(drafts.length){const b=action('',()=>openPaymentInbox());b.className='v8-notice v8-notice-drafts';b.append(node('strong',null,drafts.length+(drafts.length===1?' payment':' payments')+' to review'),node('span',null,'Review ›'));holder.append(b)}
+
  let cloud='';try{cloud=window.Android?.cloudStatus?String(Android.cloudStatus()):''}catch{}
  const last=backupPrefs().lastSaved,stale=!last||Number.isNaN(Date.parse(last))||Date.now()-Date.parse(last)>30*86400000,hasData=state.records.length+state.accounts.length>0;
  if(hasData&&stale&&!/connected|@/i.test(cloud)){const b=action('',()=>settingsBackupFromHome());b.className='v8-notice v8-notice-backup';b.append(node('strong',null,last?'No backup for over a month':'Your data is only on this phone'),node('span',null,'Back up ›'));holder.append(b)}
@@ -82,10 +81,11 @@ function v8Settings(){
  const old=[...pageEl.querySelectorAll(':scope > .settings-section')];
  for(const [title,ids] of groups){const section=node('section','settings-section v8-settings-section'),list=node('div','settings-list');section.append(node('h2','settings-section-title',title),list);for(const id of ids)if(row(id))list.append(row(id));pageEl.append(section)}
  for(const id of ['default','voice','import'])row(id)?.setAttribute('hidden','');for(const s of old)s.remove();
- for(const [id,label] of [['people','People & loans'],['capture','Auto-capture & voice'],['backup','Backup & export']])row(id).querySelector('.setting-title').textContent=label;
+ for(const [id,label] of [['people','People & loans'],['capture','Voice & receipts'],['backup','Backup & export']])row(id).querySelector('.setting-title').textContent=label;
  settingsRows=settingsRows.filter(r=>r.el.isConnected&&!r.el.hidden);
  // Merged screens keep every original option, one level deeper.
- const capture=settingsOriginals.settingsCapture;settingsOriginals.settingsCapture=function(){capture();const d=[...document.querySelectorAll('dialog[open]')].at(-1);if(!d)return;d.querySelector('.dialog-head h2, h2')&&(d.querySelector('.dialog-head h2, h2').textContent='Auto-capture & voice');d.append(node('h3',null,'Voice entry'),settingsLink('Speaking language',$('voiceLanguage').selectedOptions[0]?.textContent||'',settingsVoiceLanguage,'settings','purple'),settingsLink('Start voice entry',window.Android?.startVoice?'Speak, then review':'Typed entry available',()=>openVoice(),'income','blue'))};
+ // Voice and pasted receipts only: notification capture was removed so Android does not block installs.
+ settingsOriginals.settingsCapture=function(){const d=workflowDialog('Voice & receipts');d.append(settingsLink('Speaking language',$('voiceLanguage').selectedOptions[0]?.textContent||'',settingsVoiceLanguage,'settings','purple'),settingsLink('Start voice entry',window.Android?.startVoice?'Speak, then review':'Typed entry available',()=>openVoice(),'income','blue'),settingsLink('Paste a payment receipt','Turn an SMS or receipt text into an entry',openPaymentText,'Bills','green'),node('p','notice','Tip: hold the Add button to start voice entry. You can also share a receipt text from another app to Money Map.'))};
  const backup=settingsOriginals.settingsBackup;settingsOriginals.settingsBackup=function(){backup();const d=[...document.querySelectorAll('dialog[open]')].at(-1);if(!d)return;const h=d.querySelector('.dialog-head h2');if(h)h.textContent='Backup & export';d.append(settingsLink('Import CSV','Preview before saving',openImports,'Bills','green'),settingsLink('Reports & insights','Choose dates & compare',()=>{closeDialogs();show('insights')},'insights','orange'))};
  const people=settingsOriginals.settingsPeople;settingsOriginals.settingsPeople=function(){people();const h=[...document.querySelectorAll('dialog[open]')].at(-1)?.querySelector('.dialog-head h2');if(h)h.textContent='People & loans'};
  // Backup reminder is simply on or off.
@@ -94,7 +94,7 @@ function v8Settings(){
 function v8SettingsValues(){
  if(!$('settingsProfileName')||!state)return;const choice=v8ThemeChoice();settingValue('appearance',choice==='auto'?'Auto':(v8Themes[choice]?.label||'Paper'));
  const last=backupPrefs().lastSaved,sub=document.querySelector('.settings-profile small');if(sub)sub.textContent=last&&!Number.isNaN(Date.parse(last))?'Last backup · '+new Date(last).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'Data on this phone · not backed up';
- const def=account(state.defaultAccount);settingValue('accounts',settingsCount(state.accounts.filter(a=>!a.archived).length,'account')+(def?' · default '+displayAccountName(def):''));settingValue('capture',settingsPaymentStatus());
+ const def=account(state.defaultAccount);settingValue('accounts',settingsCount(state.accounts.filter(a=>!a.archived).length,'account')+(def?' · default '+displayAccountName(def):''));settingValue('capture',$('voiceLanguage').selectedOptions[0]?.textContent||'');
 }
 function v8AccountsPage(){
  if(page!=='accounts')return;let row=$('v8DefaultRow');if(!row){row=settingsLink('Default for spending','',()=>settingsDefault(),'accounts','green');row.id='v8DefaultRow';$('accounts').prepend(row)}
