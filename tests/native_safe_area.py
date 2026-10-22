@@ -70,7 +70,6 @@ try:
     adb('shell','input','keyevent','4')
     time.sleep(2)
     verify('back-from-leave')
-    tap_text('Tools and settings')
     tap_text('Settings')
     tap_text('Appearance')
     tap_text('AMOLED')

@@ -176,3 +176,39 @@ body.v8 #status:not(:empty){top:12px;bottom:auto!important;z-index:200;box-shado
 .v8-google-mark{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:800 19px Inter,sans-serif;color:#4285F4;background:var(--panel)}
 .v8-google-text{flex:1;min-width:0;display:flex;flex-direction:column}.v8-google-text strong{font-size:14.5px}.v8-google-text small{font-size:12px;color:var(--muted);line-height:1.35}
 .v8-google .primary{width:auto;min-height:44px;padding:8px 14px;border-radius:12px;font-size:13.5px;white-space:nowrap}
+/* Accounts: one action bar, tappable account cards, options in a sheet */
+body.v8 #accounts>#manageCreditCards,body.v8 #accounts>.quick-actions,body.v8 #accounts>p.notice{display:none}
+.v8-account-bar{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin:12px 0 16px}
+.v8-account-bar button{min-height:46px;padding:8px 6px;border-radius:14px;background:var(--surface);border:1px solid var(--border);color:var(--ink);font-size:13.5px;font-weight:650}
+.v8-account-bar .primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+body.v8 .v8-account-card{cursor:pointer;padding:14px 16px!important;margin:0 0 10px!important;border-radius:18px!important}
+body.v8 .v8-account-card .account-actions{display:none!important}
+body.v8 .v8-account-card>.notice{margin:6px 0 0;font-size:12.5px}
+body.v8 .v8-account-card .account-tile{display:flex;align-items:center;gap:10px}
+body.v8 .v8-account-card .account-name{flex:1;min-width:0;font-weight:650}
+.v8-card-chevron{color:var(--muted);font-size:20px;margin-left:2px}
+body.v8 .v8-account-card.v8-archived{opacity:.6}
+body.v8 .v8-account-card:active{background:var(--panel)!important}
+.v8-sheet-balance{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin:4px 0 16px}
+.v8-sheet-balance small{flex-basis:100%;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.v8-sheet-balance strong{font-family:Fraunces,Georgia,serif;font-size:32px;font-weight:600}
+.v8-sheet-list{margin:0 0 14px}
+.v8-danger{width:100%;min-height:48px;border-radius:14px;background:transparent;border:1px solid #E5B4AE;color:#B42318;font-weight:700}
+html[data-theme=night] .v8-danger,html[data-theme=amoled] .v8-danger{border-color:#5B2A25;color:#FF8A7A}
+
+/* Lists: whole row edits; ⋯ opens refund, split and delete */
+body.v8 .row.v8-tap{cursor:pointer}
+body.v8 .row .v8-row-edit{display:none}
+body.v8 .row .transaction-menu summary{min-width:40px;min-height:36px;display:inline-grid;place-items:center;font-size:20px;line-height:1;color:var(--muted);border-radius:10px;list-style:none}
+body.v8 .row .transaction-menu summary::-webkit-details-marker{display:none}
+/* Pop-up headers: round back/close button and a clear title */
+body.v8 dialog .dialog-head{align-items:center;gap:12px}
+body.v8 dialog .dialog-head h2{font-size:21px;font-weight:750;letter-spacing:-.3px;margin:0}
+body.v8 dialog .dialog-head>button{flex:none;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border-radius:50%!important;background:var(--surface)!important;border:1px solid var(--border)!important;color:transparent!important;font-size:12px!important;position:relative;overflow:hidden;white-space:nowrap;box-shadow:none!important}
+body.v8 dialog .dialog-head>button::before{content:"×" / "";position:absolute;inset:0;display:grid;place-items:center;color:var(--ink);font-size:22px;line-height:1}
+body.v8 dialog .dialog-head>button.settings-back::before{content:"‹" / "";font-size:26px;padding-bottom:3px}
+/* Investment entry: type comes from the chosen category */
+body.v8 #v7InvestmentFields{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;margin:4px 0 0}
+body.v8 #v7InvestmentFields label{font-size:12px;font-weight:650;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:10px 0 6px;display:block}
+/* Recurring entry actions as small buttons */
+body.v8 dialog .card>button.link-button,body.v8 dialog .card .actions button{min-height:36px;padding:6px 12px;margin:6px 6px 0 0;border-radius:10px;background:var(--panel);color:var(--ink);font-size:13px;font-weight:600;text-decoration:none}

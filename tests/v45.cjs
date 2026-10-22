@@ -40,6 +40,22 @@ const {chromium}=require('playwright'),assert=require('assert'),path=require('pa
  // Recurring: a payment seen in two months is suggested, and accepting it creates a monthly plan.
  await p.evaluate(()=>{show('more')});await p.locator('#setting-recurring').click();assert((await p.locator('dialog[open] .v8-suggest').innerText()).includes('Netflix · ₹649'));await p.locator('dialog[open] .v8-suggest .setting-item').first().click();await p.getByRole('button',{name:'Save schedule',exact:true}).click();
  assert.equal(await p.evaluate(()=>state.schedules.filter(s=>s.note==='Netflix'&&s.amount===64900&&s.frequency==='monthly'&&s.date>today()).length),1);assert.equal(await p.locator('dialog[open] .v8-suggest').count(),0);await p.evaluate(()=>closeDialogs());
+ // Settings icon goes straight to Settings.
+ await p.evaluate(()=>show('home'));await p.locator('header').getByRole('button',{name:'Settings',exact:true}).click();assert.equal(await p.evaluate(()=>page),'more');assert.equal(await p.locator('dialog[open]').count(),0);
+ // Accounts: tapping an account opens its options; Set as default works from there.
+ await p.evaluate(()=>{update({accounts:state.accounts.concat({id:'sbi',bank:'SBI',name:'SBI savings',opening:200000,date:'2020-01-01'})});render();show('accounts')});
+ assert.equal(await p.locator('#accountList .account-actions').first().isVisible(),false);await p.locator('.v8-account-card',{hasText:'SBI savings'}).click();
+ const sheet=await p.locator('dialog[open]').innerText();assert(sheet.includes('Edit details')&&sheet.includes('Set as default')&&sheet.includes('Delete account'));
+ await p.locator('dialog[open]').getByRole('button',{name:/Set as default/}).click();assert.equal(await p.evaluate(()=>state.defaultAccount),'sbi');await p.evaluate(()=>{changeDefault('bank');closeDialogs()});
+ // Investment types, with Post office schemes as subcategories.
+ for(const c of ['Mutual funds','Stocks','PPF','EPF / VPF','NPS','Fixed deposit','Recurring deposit','Post office','Sukanya Samriddhi','Gold','Bonds','Insurance (LIC)'])assert.equal(await p.evaluate(c=>kind(c),c),'aside',c);
+ assert(await p.evaluate(()=>categoryChildren('Post office').includes('NSC')));await p.evaluate(()=>{show('invest');openEntry(null,'SIP')});await p.locator('#categories button',{hasText:'Post office'}).click();assert.equal(await p.locator('#pageTitle').innerText(),'Add investment');assert.equal(await p.locator('#v7InvestCategory').inputValue(),'Post office');
+ await p.locator('#amount').fill('5000');await p.locator('#v7AMC').fill('India Post');await p.locator('#v7Scheme').fill('NSC 5 yr');await p.locator('#saveEntry').click();assert.deepEqual(await p.evaluate(()=>state.records.at(-1).investment),{amc:'India Post',scheme:'NSC 5 yr',group:'Post office'});
+ // Recurring entries post themselves when due, once, and reduce the balance.
+ const before=await p.evaluate(()=>balance(account('bank')));await p.evaluate(()=>{const d=new Date(today()+'T12:00:00');d.setMonth(d.getMonth()-2);update({schedules:[{id:'rd',note:'Post office RD',category:'Recurring deposit',amount:100000,accountId:'bank',date:d.toISOString().slice(0,10),anchor:d.getDate(),frequency:'monthly'}]});render();render()});
+ const rd=await p.evaluate(()=>state.records.filter(r=>r.occurrence?.startsWith('rd:')));assert(rd.length>=2&&rd.length<=3,'catch-up count '+rd.length);assert.equal(await p.evaluate(()=>balance(account('bank'))),before-1000*rd.length);assert(await p.evaluate(()=>state.schedules[0].date>today()));
+ // Rows: tapping an entry opens it for editing; ⋯ keeps the other actions.
+ await p.evaluate(()=>{show('expenses')});await p.locator('#v7RecentSpend .row.v8-tap .transaction-text').first().click();assert.equal(await p.evaluate(()=>page),'entry');await p.evaluate(()=>show('expenses'));assert.equal(await p.locator('#v7RecentSpend .transaction-menu summary').first().innerText(),'⋯');
  // Backups from other app versions restore even with appearance values this version does not know.
  assert.deepEqual(await p.evaluate(()=>validate({...JSON.parse(JSON.stringify(state)),theme:'tangerine',uiPreferences:{textSize:'huge',amoledAccent:'silver',softSilver54:true}}).uiPreferences),{textSize:'comfortable',amoledAccent:'mint'});
  await p.evaluate(()=>message('Saved'));const toast=await p.locator('#status').boundingBox();assert(toast.y<100,'message shows at the top');

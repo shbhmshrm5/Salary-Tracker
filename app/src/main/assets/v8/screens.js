@@ -117,10 +117,54 @@ function v8GoogleCard(){
  const btn=action(connected?'Manage':'Sign in with Google',()=>{if(!connected&&window.Android?.connectDrive)Android.connectDrive();else openCloud()});btn.id='v8GoogleButton';btn.className=connected?'v8-text-button':'primary';
  card.append(node('span','v8-google-mark','G'),text,btn);
 }
+/* ---------- Recurring entries post themselves on their due date ---------- */
+function v8AutoPost(){
+ if(!state||!(state.schedules||[]).some(s=>!s.paused&&s.date<=today()))return 0;
+ let records=state.records,schedules=state.schedules.map(s=>({...s})),added=0;const known=new Set(records.map(r=>r.occurrence).filter(Boolean));
+ for(const s of schedules){let guard=0;while(!s.paused&&s.date<=today()&&guard++<36){const a=account(s.accountId);if(!a||a.archived)break;const token=s.id+':'+s.date;
+  if(!known.has(token)){known.add(token);const r={id:uid(),createdAt:Date.now()+added,amount:s.amount/100,category:s.category,subcategory:s.subcategory||'',note:s.note||s.category,date:s.date,accountId:s.accountId,paidBy:'me',occurrence:token};if(kind(s.category)==='aside')r.investment={amc:s.provider||'Recurring plan',scheme:s.note||s.category,group:s.category};records=records.concat(r);added++}
+  s.date=nextOccurrence(s.date,s.frequency,s.anchor)}}
+ if(added&&update({records,schedules})){message(added===1?'1 recurring entry added':added+' recurring entries added');return added}return 0;
+}
+/* ---------- Investment types ---------- */
+const v8InvestTypes=[['Mutual funds',['Equity','Debt','Hybrid','Index fund','ELSS']],['Stocks',[]],['PPF',[]],['EPF / VPF',['EPF','VPF']],['NPS',['Tier I','Tier II']],['Fixed deposit',[]],['Recurring deposit',[]],['Post office',['NSC','KVP','Monthly income (MIS)','Senior citizen (SCSS)','Time deposit','Post office RD']],['Sukanya Samriddhi',[]],['Gold',['Sovereign gold bond','Gold ETF','Digital gold','Physical gold']],['Bonds',[]],['Insurance (LIC)',[]]];
+function v8EnsureInvestTypes(){
+ if(!state)return;const taken=new Set(categoryNames(state).map(c=>c.toLocaleLowerCase())),missing=v8InvestTypes.filter(([n])=>!taken.has(n.toLocaleLowerCase()));
+ if(missing.length)update({categoryDefinitions:[...(state.categoryDefinitions||[]),...missing.map(([name,subcategories])=>({name,kind:'aside',subcategories}))]});
+}
+function v8InvestChips(){
+ if(kind(category)!=='aside')return;const holder=$('categories'),shown=new Set([...holder.querySelectorAll('button')].map(b=>b.textContent.trim()));
+ for(const c of ['Mutual funds','Stocks','PPF','Fixed deposit','Post office','NPS','Gold']){if(shown.has(c)||!categoryNames(state).includes(c))continue;const b=action('',()=>pick(c));b.type='button';const glyph=node('span','v7-category-icon');glyph.innerHTML=icon(c==='Stocks'||c==='Mutual funds'?'Investments':c==='Gold'||c==='PPF'||c==='Post office'?'Savings':'SIP');b.append(glyph,node('span',null,c));b.setAttribute('aria-pressed','false');holder.append(b)}
+ // The investment type doubles as its group; only the provider and plan need typing.
+ const group=$('v7InvestCategory');if(group&&(!group.value||categoryNames(state).includes(group.value))){group.value=category}
+}
+/* ---------- Accounts: tap an account for its options ---------- */
+function v8AccountSheet(card,a){
+ const buttons=[...card.querySelectorAll('.account-actions button, .account-actions summary')].filter(b=>b.tagName==='BUTTON'),find=t=>buttons.find(b=>b.textContent.trim()===t);
+ const d=workflowDialog(displayAccountName(a)),head=node('div','v8-sheet-balance');head.append(node('small',null,isCard(a)?'Outstanding':'Balance'),node('strong',null,money(isCard(a)?Math.max(0,-balance(a)):balance(a))));if(a.id===state.defaultAccount)head.append(node('span','pill','Default for spending'));if(a.archived)head.append(node('span','pill','Archived'));d.append(head);
+ const list=node('div','settings-list v8-sheet-list');const row=(label,value,original,glyph,tone)=>{const b=original&&find(original);if(!b)return;list.append(settingsLink(label,value||'',()=>{d.close();b.click()},glyph,tone))};
+ row('Record bill payment','',`Record bill payment`,'Bills','green');row('View history','All entries','History','insights','blue');row('Edit details','Name, bank, opening balance','Edit','settings','blue');
+ if(a.id!==state.defaultAccount)row('Set as default','Used for new expenses','Use as default','accounts','green');row('Reconcile balance','Match with your bank','Reconcile','Bills','purple');row(a.archived?'Unarchive':'Archive',a.archived?'Show again in lists':'Hide without deleting',a.archived?'Unarchive':'Archive','settings','grey');
+ d.append(list);const del=find('Delete');if(del){const b=action('Delete account',()=>{d.close();del.click()});b.className='v8-danger';d.append(b)}
+}
+function v8AccountsLayout(){
+ const sec=$('accounts');if(!sec)return;let bar=$('v8AccountBar');if(!bar){bar=node('div','v8-account-bar');bar.id='v8AccountBar';const add=sec.querySelector('.quick-actions button[onclick="openAccount()"]'),transfer=$('transferButton'),cards=$('manageCreditCards');if(add){add.textContent='+ Add account';add.className='primary'}for(const b of [add,transfer,cards])if(b){b.classList.remove('link-button');bar.append(b)}sec.prepend(bar)}
+ $('accountList')?.querySelectorAll(':scope > .card').forEach((card,i)=>{const a=state.accounts[i];if(!a||card.dataset.v8)return;card.dataset.v8='1';card.classList.add('v8-account-card');card.classList.toggle('v8-archived',!!a.archived);card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',displayAccountName(a)+' options');const open=e=>{if(e.target.closest('.account-actions'))return;v8AccountSheet(card,a)};card.addEventListener('click',open);card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();v8AccountSheet(card,a)}});const chev=node('span','v8-card-chevron','›');chev.setAttribute('aria-hidden','true');card.querySelector('.account-tile')?.append(chev)});
+}
+/* ---------- Lists: tap a row to edit; the menu keeps refund, split and delete ---------- */
+function v8Rows(el){for(const row of el.querySelectorAll(':scope > .row')){const edit=[...row.querySelectorAll('button')].find(b=>b.textContent.trim()==='Edit'&&!b.closest('details'));if(!edit)continue;edit.classList.add('v8-row-edit');row.classList.add('v8-tap');row.addEventListener('click',e=>{if(e.target.closest('details,button,a,input,select'))return;edit.click()});const more=row.querySelector('.transaction-menu summary');if(more)more.textContent='⋯'}}
+/* ---------- Investments use their type as the group, so only provider and plan are typed ---------- */
+function v8InvestForm(){const aside=kind(category)==='aside',group=$('v7InvestCategory');if(aside&&group&&(!group.value||categoryNames(state).includes(group.value)))group.value=category;if(aside)for(const id of ['entryTitle','pageTitle'])if($(id)&&/SIP|savings|investment/i.test($(id).textContent))$(id).textContent=(editing?'Edit':'Add')+' investment';if(aside&&$('saveEntry'))$('saveEntry').textContent='Save investment';const fields=$('v7InvestmentFields');if(fields&&$('modernEntryGrid')&&fields.nextElementSibling!==$('v8EntryMeta')){$('v8EntryMeta')?.before(fields)}}
+let v8Posting=false;
 function initV8Screens(){
+ const rowsBefore=rows;rows=function(el,list){rowsBefore(el,list);v8Rows(el)};
+ // The settings icon opens Settings directly.
+ const gear=document.querySelector('header .header-settings');if(gear){gear.onclick=()=>show('more');gear.setAttribute('aria-label','Settings');gear.innerHTML=icon('settings')}
+ v8EnsureInvestTypes();const pickBefore=pick;pick=function(c){pickBefore(c);v8InvestChips();v8InvestForm()};const openBefore=openEntry;openEntry=function(...args){const result=openBefore(...args);if(page==='entry'){v8InvestChips();v8InvestForm();entrySnapshot=formSnapshot()}return result};
+ for(const [id,label,ph] of [['v7AMC','Provider','Bank, AMC or post office'],['v7Scheme','Plan / scheme','e.g. Nifty 50 index fund, NSC 5 yr'],['v7InvestCategory','Investment type','']]){const input=$(id);if(!input)continue;const l=document.querySelector('label[for='+id+']');if(l)l.textContent=label;if(ph)input.placeholder=ph}
  v8EntryLayout();v8Nav();v8Settings();
  const google=node('section','v8-google');google.id='v8GoogleCard';document.querySelector('#more .settings-profile')?.after(google);
- const schedules=settingsOriginals.openSchedules;settingsOriginals.openSchedules=function(){schedules();const d=[...document.querySelectorAll('dialog[open]')].at(-1),ideas=v8RecurringSuggestions();if(!d||!ideas.length)return;const box=node('div','v8-suggest');box.append(node('h3',null,'Looks like it repeats'));for(const r of ideas)box.append(settingsLink((r.note||r.category)+' · '+money(r.amount),'Make recurring',()=>v8ScheduleFrom(r),'calendar','purple'));d.querySelector('.notice')?.after(box)};
+ const schedules=settingsOriginals.openSchedules;settingsOriginals.openSchedules=function(){schedules();{const n=[...document.querySelectorAll('dialog[open]')].at(-1)?.querySelector('.notice');if(n)n.textContent='Each entry is added automatically on its date and reduces the account balance. Edit or delete it like any other entry.'}const d=[...document.querySelectorAll('dialog[open]')].at(-1),ideas=v8RecurringSuggestions();if(!d||!ideas.length)return;const box=node('div','v8-suggest');box.append(node('h3',null,'Looks like it repeats'));for(const r of ideas)box.append(settingsLink((r.note||r.category)+' · '+money(r.amount),'Make recurring',()=>v8ScheduleFrom(r),'calendar','purple'));d.querySelector('.notice')?.after(box)};
  // Google Drive: offer sign-in on the phone; Google rejects it until the app is registered (docs/GOOGLE_DRIVE_SETUP.md).
  const cloud=settingsOriginals.openCloud;settingsOriginals.openCloud=function(){cloud();const d=[...document.querySelectorAll('dialog[open]')].at(-1),status=$('cloudStatus');if(!d||!status||!window.Android?.connectDrive)return;let current='';try{current=String(Android.cloudStatus?.()||'')}catch{}if(current.startsWith('Connected:'))return;
   status.textContent='Not connected';const note=status.nextElementSibling;if(note)note.textContent='Sign in with Google to keep your records in your Google account and restore them on a new phone. Save a backup file first.';
@@ -133,6 +177,8 @@ function initV8Screens(){
   $('modernHeaderAdd').classList.add('hidden');
   const target=['income','insights'].includes(page)?'expenses':page==='leaveEntry'?'calendar':page==='entry'?entryReturn==='income'?'expenses':entryReturn:page;for(const b of document.querySelectorAll('nav[data-modern] button[data-page]')){const on=b.dataset.page===target;b.classList.toggle('active',on);b.setAttribute('aria-current',on?'page':'false')}
   for(const id of ['expenseLabel','incomePeriodLabel']){const el=$(id);if(el)el.textContent=el.textContent.replace(/\d{4}-\d{2}(?!-)/,v8PeriodLabel())}
-  v8Activity();v8Wealth();v8HomeNotices();v8AccountsPage();v8SettingsValues();v8GoogleCard()};
+  if(!v8Posting){v8Posting=true;try{v8EnsureInvestTypes();if(v8AutoPost())priorRender()}finally{v8Posting=false}}
+  v8AccountsLayout();v8Activity();v8Wealth();v8HomeNotices();v8AccountsPage();v8SettingsValues();v8GoogleCard()};
+ const resume=window.onAppResume;window.onAppResume=function(){resume?.();render()};
  const priorValues=renderSettingsValues;renderSettingsValues=function(){priorValues();v8SettingsValues()};
 }
