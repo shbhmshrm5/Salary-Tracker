@@ -50,5 +50,9 @@ const {chromium}=require('playwright'),assert=require('assert'),path=require('pa
  assert(await p.locator('#v7SubcategoryChips button.selected >> text=Vitamins').isVisible());
  await p.click('#moreCategories');assert(await p.locator('#v7CategorySheet .v9-new-category').isVisible());
  await p.screenshot({path:'previews/v46-category-sheet.png'});
+ // Home points out expenses saved without an account and opens the entry to fix it.
+ await p.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());update({records:state.records.concat([{id:'noacc',category:'Food',subcategory:'',note:'Lunch',amount:260,date:today(),accountId:null,createdAt:200}])});show('home')});
+ assert.equal(await p.locator('#v9NoAccount strong').innerText(),'1 expense has no account');
+ await p.click('#v9NoAccount');assert.equal(await p.evaluate(()=>editing),'noacc');
  assert.deepEqual(errors,[]);await b.close();console.log('v46 category page checks passed');
 })().catch(e=>{console.error(e);process.exit(1)});

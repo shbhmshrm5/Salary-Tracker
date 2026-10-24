@@ -99,6 +99,15 @@ function v9CategoryTaps(){
  },true);
 }
 
+// Home reminds you about expenses you paid with no account chosen, so account totals stay complete.
+function v9NoAccountNotice(){
+ const home=$('v8Home');$('v9NoAccount')?.remove();if(!home)return;
+ const missing=state.records.filter(r=>kind(r.category)==='expense'&&r.paidBy!=='other'&&!r.accountId).sort((a,b)=>b.date.localeCompare(a.date));if(!missing.length)return;
+ const b=action('',()=>{if(missing.length===1)return openEntry(missing[0].id);const d=workflowDialog('Choose an account');d.append(node('p','muted','Tap an entry and choose the account that paid.'));for(const r of missing){const row=action('',()=>{d.close();openEntry(r.id)});row.className='v8-row';const text=node('span','v8-row-text');text.append(node('strong',null,r.note||r.category),node('small',null,categoryLabel(r)+' · '+v8Day(r.date)));row.append(text,node('strong','v8-amount','−'+money(r.amount)));d.append(row)}});
+ b.id='v9NoAccount';b.className='v8-notice v8-notice-drafts';b.append(node('strong',null,missing.length===1?'1 expense has no account':missing.length+' expenses have no account'),node('span',null,'Fix ›'));
+ let holder=home.querySelector('.v8-notices');if(!holder){holder=node('div','v8-notices');home.querySelector('.v8-hero')?.before(holder)}holder.append(b);
+}
+
 /* ---------- Add entry: usage-ordered chips, "+ Add" subcategory, suggestions from past notes ---------- */
 let v9Manual=false,v9Auto=false;
 // The six categories used most in the last 90 days come first; the defaults fill any gaps.
@@ -135,6 +144,7 @@ function initV9Categories(){
   const hint=node('p','v9-suggestion','Category from your last “'+past.note.trim()+'” entry');hint.id='v9Suggestion';$('note').after(hint);
  });
  v9CategoryTaps();
+ const priorNotices=v8HomeNotices;v8HomeNotices=function(){priorNotices();v9NoAccountNotice()};
  const priorChart=renderChart;renderChart=function(list,sum){if($('chartMode').value==='categories')return v9InsightsCategories($('chart'),list);return priorChart(list,sum)};
  render();
 }
