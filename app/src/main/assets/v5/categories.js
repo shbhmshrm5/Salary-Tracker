@@ -17,7 +17,7 @@ function addCategoryForm(parent=null,fromEntry=false){
   else{if(['all expenses','other categories','__other'].includes(value.toLowerCase()))throw Error('This name is reserved for summaries. Choose another name.');if(categoryNames(state).some(x=>x.toLowerCase()===value.toLowerCase()))throw Error('This category already exists.');defs.push({name:value,kind:type.value,subcategories:[]})}
   if(!update({categoryDefinitions:defs}))return;
   d.dataset.dirty='';d.dataset.settingsBaseline=settingsSnapshot(d);
-  if(fromEntry){d.close();pick(parent||value);if(parent)$('entrySubcategory').value=value;}
+  if(fromEntry){d.close();pick(parent||value);if(parent){$('entrySubcategory').value=value;$('entrySubcategory').dispatchEvent(new Event('change',{bubbles:true}))}}
   else settingsBack();
   renderSettingsValues();message(parent?'Subcategory added':'Category added');
  });

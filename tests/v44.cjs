@@ -12,7 +12,7 @@ const {chromium}=require('playwright'),assert=require('assert'),path=require('pa
  assert.equal(await p.locator('.v8-donut-centre strong').innerText(),'₹4,250');assert.equal(await p.locator('.v8-donut circle').count(),3);
  assert.deepEqual(await p.locator('.v8-legend-row span').allInnerTexts(),['Travel','Food']);
  await p.locator('.v8-seg').getByRole('button',{name:'Paid from'}).click();assert.deepEqual(await p.locator('.v8-legend-row span').allInnerTexts(),['HDFC card','Paid by others','GPay']);
- await p.locator('.v8-seg').getByRole('button',{name:'Category'}).click();await p.locator('.v8-legend-row').filter({hasText:'Food'}).click();assert.equal(await p.evaluate(()=>page),'expenses');assert.equal(await p.evaluate(()=>categoryFilter),'Food');
+ await p.locator('.v8-seg').getByRole('button',{name:'Category'}).click();await p.locator('.v8-legend-row').filter({hasText:'Food'}).click();assert.equal(await p.locator('dialog[open].v9-category-page h2').innerText(),'Food');await p.evaluate(()=>document.querySelector('dialog[open]').close());
  await p.evaluate(()=>{categoryFilter=null;show('home')});assert.equal(await p.locator('#v8Home .v8-row').count(),4);assert.equal(await p.locator('#v8Home .v8-amount.plus').innerText(),'+₹75,000');
  // Every theme paints the bottom menu with the page colour, and the native bars get the same colour.
  const calls=[];await p.exposeFunction('nativeTheme',n=>calls.push(n));await p.evaluate(()=>{window.Android={setTheme:n=>nativeTheme(n),isSystemDark:()=>window.systemDark===true}});
