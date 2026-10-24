@@ -1,0 +1,45 @@
+/* v6: category page, Insights category chart, entry chips */
+/* Category page */
+dialog.v9-category-page .v9-scope{margin:4px 0 16px;width:max-content;max-width:100%}
+dialog.v9-category-page .v9-scope button{white-space:nowrap}
+.v9-summary{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.v9-total{font-family:Fraunces,Georgia,serif;font-size:34px;font-weight:600;letter-spacing:-.5px;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--ink)}
+.v9-summary small{font-size:13px;color:var(--muted)}
+.v9-compare.up{color:var(--spend-color)}
+.v9-compare.down{color:var(--income-color)}
+.v9-trend{display:flex;align-items:flex-end;gap:8px;height:104px;padding:10px 12px 8px;margin-bottom:16px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+.v9-trend[hidden]{display:none}
+.v9-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-width:0;height:100%}
+.v9-bar i{display:block;width:100%;max-width:28px;border-radius:4px 4px 0 0;background:var(--border)}
+.v9-bar.current i{background:var(--accent)}
+.v9-bar small{font-size:11px;color:var(--muted);line-height:1}
+.v9-bar .v9-bar-value{font-size:10px;min-height:10px;white-space:nowrap}
+.v9-bar.current small{color:var(--ink);font-weight:650}
+.v9-parts{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.v9-parts:empty{display:none}
+.v9-parts-title{margin:0 0 2px;font-size:11.5px;font-weight:650;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.v9-part{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--ink);text-align:left;font-size:14px}
+.v9-part span,.v9-part strong{position:relative}
+.v9-part strong{font-variant-numeric:tabular-nums;font-weight:650}
+.v9-part-fill{position:absolute;inset:0 auto 0 0;background:var(--tint);border-radius:0}
+.v9-part[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.v9-search{margin:2px 0 8px}
+.v9-count{margin:6px 0 0;font-size:12.5px;color:var(--muted)}
+.v9-list .v8-row:last-child{border-bottom:0}
+.v9-add{width:100%;min-height:48px;margin-top:14px;background:var(--tint);color:var(--accent);font-weight:650;border-radius:14px;text-decoration:none}
+/* Insights: spending by category */
+.v9-donut-wrap{display:flex;justify-content:center;margin:4px 0 12px}
+.v9-donut{width:min(220px,70vw);height:auto}
+.v9-donut circle{fill:none;stroke-width:22;cursor:pointer;transform:rotate(-90deg);transform-origin:100px 100px}
+.v9-legend{display:flex;flex-direction:column}
+.v9-legend-row{display:grid;grid-template-columns:10px 1fr auto auto 12px;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 0;background:transparent;border:0;border-bottom:1px solid var(--border);border-radius:0;color:var(--ink);text-align:left;font-size:14px}
+.v9-legend-row:last-child{border-bottom:0}
+.v9-legend-row i{width:10px;height:10px;border-radius:50%}
+.v9-legend-row strong{font-variant-numeric:tabular-nums;font-weight:650}
+.v9-legend-row small{min-width:44px;text-align:right;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.v9-chevron{color:var(--muted);font-weight:400;font-size:18px;line-height:1}
+.v9-hint{margin:10px 0 0;font-size:12.5px;color:var(--muted)}
+/* Add entry */
+#v7SubcategoryChips .v9-chip-add{border-style:dashed!important;color:var(--muted)!important;background:transparent!important}
+.v9-new-category{width:100%;min-height:44px;margin:10px 0 4px;border:1px dashed var(--border);border-radius:12px;background:transparent;color:var(--accent);font-weight:650;text-decoration:none}
+.v9-suggestion{margin:4px 0 0;text-align:center;font-size:12.5px;color:var(--accent)}
