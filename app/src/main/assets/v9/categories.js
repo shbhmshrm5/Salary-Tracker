@@ -125,21 +125,31 @@ function v9ExpenseCategories(){
  const more=$('moreCategories');more.classList.remove('hidden');more.textContent='All categories';more.onclick=()=>v7CategorySheet(names);
  v7Subcategories();v7InvestmentVisibility();
 }
-// Tapping the amount scrolls the number pad fully into view above the pinned Save button.
-function v9ShowKeypad(){
- const pad=$('v8Keypad'),bar=$('saveEntry')?.closest('.form-actions');if(!pad||page!=='entry')return;
- const box=pad.getBoundingClientRect(),limit=(bar?bar.getBoundingClientRect().top:innerHeight)-8;
- if(box.bottom>limit)scrollBy({top:box.bottom-limit,behavior:'smooth'});
+// Tapping the amount docks the number pad above the pinned Save button, so the amount stays where it is
+// and both are visible while typing. Tapping anything else, Done, or leaving the page puts the pad back.
+function v9PadDock(){
+ const pad=$('v8Keypad');if(!pad||$('v9PadDock'))return;
+ const dock=node('div','v9-pad-dock');dock.id='v9PadDock';pad.before(dock);
+ const head=node('div','v9-pad-head'),done=action('Done',()=>v9PadClose());done.className='v9-pad-done';head.append(done);dock.append(head,pad);
 }
-// A readout above the pad repeats the amount while the amount itself is scrolled off screen.
-function v9PadReadout(){
- const pad=$('v8Keypad'),amount=$('amount');if(!pad||$('v9PadAmount'))return;
- const out=node('div','v9-pad-amount');out.id='v9PadAmount';out.setAttribute('aria-hidden','true');pad.before(out);
- const draw=()=>{out.textContent='₹ '+(amount.value||'0')};amount.addEventListener('input',draw);draw();
- new IntersectionObserver(([e])=>out.classList.toggle('show',!e.isIntersecting&&page==='entry')).observe(amount);
+function v9PadPlace(){const bar=$('saveEntry')?.closest('.form-actions'),bottom=bar?Math.max(0,innerHeight-bar.getBoundingClientRect().top):0;document.documentElement.style.setProperty('--v9-pad-bottom',bottom+'px')}
+function v9PadOpen(){
+ const dock=$('v9PadDock');if(!dock||page!=='entry')return;
+ // When the inline pad already fits under the amount, nothing needs to move.
+ const bar=$('saveEntry')?.closest('.form-actions'),limit=(bar?bar.getBoundingClientRect().top:innerHeight)-4,box=$('v8Keypad').getBoundingClientRect();
+ if(!dock.classList.contains('docked')&&box.top>=0&&box.bottom<=limit)return;
+ v9PadPlace();dock.classList.add('docked');document.body.classList.add('v9-pad-open');
+ // Keep the amount above the docked pad.
+ const amount=$('amount').getBoundingClientRect(),padTop=$('v9PadDock').getBoundingClientRect().top;if(amount.bottom>padTop-8||amount.top<0)scrollBy({top:amount.top-80,behavior:'smooth'});
 }
+function v9PadClose(){const dock=$('v9PadDock');if(!dock?.classList.contains('docked'))return;dock.classList.remove('docked');document.body.classList.remove('v9-pad-open')}
 function initV9Categories(){
- for(const type of ['focus','click'])$('amount').addEventListener(type,v9ShowKeypad);v9PadReadout();
+ v9PadDock();
+ for(const type of ['focus','click'])$('amount').addEventListener(type,v9PadOpen);
+ document.addEventListener('pointerdown',e=>{if(!e.target.closest('#v9PadDock,#amount,#form .form-actions'))v9PadClose()},true);
+ document.addEventListener('focusin',e=>{if(!e.target.closest('#v9PadDock,#amount,#form .form-actions'))v9PadClose()});
+ for(const type of ['scroll','resize'])addEventListener(type,()=>{if(document.body.classList.contains('v9-pad-open'))v9PadPlace()},{passive:true});
+ const priorShow=show;show=function(...args){v9PadClose();return priorShow(...args)};
  v7ExpenseCategories=v9ExpenseCategories;
  // Subcategory chips end with "+ Add" so a new one can be made without leaving the entry.
  const priorSubs=v7Subcategories;v7Subcategories=function(){priorSubs();const chips=$('v7SubcategoryChips'),group=$('entrySubcategoryGroup');if(!chips)return;group.hidden=false;const add=action('+ Add',()=>addCategoryForm(category,true));add.type='button';add.className='v9-chip-add';add.setAttribute('aria-label','Add a subcategory to '+category);chips.append(add)};
