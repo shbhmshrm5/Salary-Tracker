@@ -43,3 +43,12 @@ dialog.v9-category-page .v9-scope button{white-space:nowrap}
 #v7SubcategoryChips .v9-chip-add{border-style:dashed!important;color:var(--muted)!important;background:transparent!important}
 .v9-new-category{width:100%;min-height:44px;margin:10px 0 4px;border:1px dashed var(--border);border-radius:12px;background:transparent;color:var(--accent);font-weight:650;text-decoration:none}
 .v9-suggestion{margin:4px 0 0;text-align:center;font-size:12.5px;color:var(--accent)}
+/* Number pad: amount readout while the amount is scrolled away */
+/* The row keeps its height either way, so the pad never shifts while scrolling */
+.v9-pad-amount{visibility:hidden;opacity:0;transition:opacity .15s;text-align:center;font-family:Fraunces,Georgia,serif;font-size:22px;font-weight:600;line-height:30px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.v9-pad-amount.show{visibility:visible;opacity:1}
+/* Wealth: investments you hold */
+.v9-holding-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.v9-gain{font-size:12px;font-variant-numeric:tabular-nums}
+.v9-gain.up{color:var(--income-color)}
+.v9-gain.down{color:var(--spend-color)}

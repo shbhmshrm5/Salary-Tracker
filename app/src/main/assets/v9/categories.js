@@ -125,7 +125,21 @@ function v9ExpenseCategories(){
  const more=$('moreCategories');more.classList.remove('hidden');more.textContent='All categories';more.onclick=()=>v7CategorySheet(names);
  v7Subcategories();v7InvestmentVisibility();
 }
+// Tapping the amount scrolls the number pad fully into view above the pinned Save button.
+function v9ShowKeypad(){
+ const pad=$('v8Keypad'),bar=$('saveEntry')?.closest('.form-actions');if(!pad||page!=='entry')return;
+ const box=pad.getBoundingClientRect(),limit=(bar?bar.getBoundingClientRect().top:innerHeight)-8;
+ if(box.bottom>limit)scrollBy({top:box.bottom-limit,behavior:'smooth'});
+}
+// A readout above the pad repeats the amount while the amount itself is scrolled off screen.
+function v9PadReadout(){
+ const pad=$('v8Keypad'),amount=$('amount');if(!pad||$('v9PadAmount'))return;
+ const out=node('div','v9-pad-amount');out.id='v9PadAmount';out.setAttribute('aria-hidden','true');pad.before(out);
+ const draw=()=>{out.textContent='₹ '+(amount.value||'0')};amount.addEventListener('input',draw);draw();
+ new IntersectionObserver(([e])=>out.classList.toggle('show',!e.isIntersecting&&page==='entry')).observe(amount);
+}
 function initV9Categories(){
+ for(const type of ['focus','click'])$('amount').addEventListener(type,v9ShowKeypad);v9PadReadout();
  v7ExpenseCategories=v9ExpenseCategories;
  // Subcategory chips end with "+ Add" so a new one can be made without leaving the entry.
  const priorSubs=v7Subcategories;v7Subcategories=function(){priorSubs();const chips=$('v7SubcategoryChips'),group=$('entrySubcategoryGroup');if(!chips)return;group.hidden=false;const add=action('+ Add',()=>addCategoryForm(category,true));add.type='button';add.className='v9-chip-add';add.setAttribute('aria-label','Add a subcategory to '+category);chips.append(add)};
