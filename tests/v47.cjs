@@ -2,19 +2,25 @@ const {chromium}=require('playwright'),assert=require('assert'),path=require('pa
 (async()=>{
  fs.mkdirSync('previews',{recursive:true});const b=await chromium.launch(),p=await b.newPage({viewport:{width:390,height:700},timezoneId:'Asia/Kolkata',hasTouch:true,isMobile:true}),errors=[];p.on('pageerror',e=>errors.push(e.message));p.on('dialog',d=>d.accept());await p.goto('file://'+path.resolve('app/src/main/assets/index.html'));
  await p.evaluate(()=>{update({accounts:[{id:'bank',bank:'HDFC',name:'Salary account',opening:5000000,date:'2020-01-01'}],defaultAccount:'bank',records:[{id:'sip',category:'SIP',amount:1500,date:today(),note:'',accountId:'bank',createdAt:1,investment:{amc:'HDFC AMC',scheme:'Index fund',group:'Mutual funds'}}]});render();show('home')});
- // Number pad: tapping the amount brings the whole pad above the pinned Save button on Expense, Invest and Income.
+ // Number pad: tapping the amount docks the pad above Save, so the amount and every key stay visible together.
  for(const [label,c] of [['expense','Food'],['investment','SIP'],['income','Salary']]){
   await p.evaluate(c=>{scrollTo(0,0);openEntry(null,c)},c);await p.waitForTimeout(150);await p.tap('#amount');await p.waitForTimeout(700);
-  const fit=await p.evaluate(()=>{const k=$('v8Keypad').getBoundingClientRect(),bar=$('saveEntry').closest('.form-actions').getBoundingClientRect();return {top:k.top,bottom:k.bottom,bar:bar.top}});
-  assert(fit.top>=0&&fit.bottom<=fit.bar,label+' pad hidden: '+JSON.stringify(fit));
+  const fit=await p.evaluate(()=>{const a=$('amount').getBoundingClientRect(),k=$('v9PadDock').getBoundingClientRect(),bar=$('saveEntry').closest('.form-actions').getBoundingClientRect();return {amountTop:a.top,amountBottom:a.bottom,padTop:k.top,padBottom:k.bottom,bar:bar.top,barBottom:bar.bottom,vh:innerHeight}});
+  assert(fit.amountTop>=0&&fit.amountBottom<=fit.padTop,label+': amount hidden '+JSON.stringify(fit));
+  assert(fit.padBottom<=fit.bar+1&&fit.barBottom<=fit.vh+1,label+': pad or Save off screen '+JSON.stringify(fit));
   for(const k of ['2','5','0'])await p.tap(`#v8Keypad button >> text="${k}"`);
   assert.equal(await p.evaluate(()=>$('amount').value),'250');
-  const amountVisible=await p.evaluate(()=>{const r=$('amount').getBoundingClientRect();return r.bottom>0&&r.top<innerHeight});
-  assert.equal(await p.evaluate(()=>$('v9PadAmount').classList.contains('show')),!amountVisible,label+': the readout shows exactly when the amount is scrolled away');
-  if(!amountVisible)assert.equal(await p.locator('#v9PadAmount').innerText(),'₹ 250');
   if(label==='investment')await p.screenshot({path:'previews/v47-invest-keypad.png'});
+  // Tapping anything else puts the pad away; Done does too.
+  await p.tap('#categories button >> nth=1');assert.equal(await p.evaluate(()=>$('v9PadDock').classList.contains('docked')),false);
+  await p.tap('#amount');await p.waitForTimeout(300);await p.tap('#v9PadDock .v9-pad-done');assert.equal(await p.evaluate(()=>$('v9PadDock').classList.contains('docked')),false);
   await p.evaluate(()=>{$('amount').value='';$('amount').dispatchEvent(new Event('input',{bubbles:true}));entrySnapshot=formSnapshot();show('home')});
  }
+ // Saving straight from the docked pad works.
+ await p.evaluate(()=>openEntry(null,'Food'));await p.waitForTimeout(150);await p.tap('#amount');await p.waitForTimeout(500);for(const k of ['9','9'])await p.tap(`#v8Keypad button >> text="${k}"`);
+ const count=await p.evaluate(()=>state.records.length);await p.tap('#saveEntry');await p.waitForTimeout(300);
+ assert.equal(await p.evaluate(()=>state.records.length),count+1,'Save works while the pad is docked');assert.equal(await p.evaluate(()=>document.body.classList.contains('v9-pad-open')),false);
+ await p.evaluate(()=>{state.records.length&&update({records:state.records.filter(r=>r.amount!==99)});show('home')});
  // Wealth: an investment already held is added at its value without touching account balances or this month's totals.
  const before=await p.evaluate(()=>({bank:balance(account('bank')),records:state.records.length}));
  await p.evaluate(()=>show('invest'));assert.match(await p.locator('#v9HoldingsCard').innerText(),/Investments you hold/);
