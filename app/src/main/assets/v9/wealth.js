@@ -56,8 +56,32 @@ function v9HoldingsCard(){
  card.append(Object.assign(action('+ Add an investment you hold',()=>v9HoldingForm()),{className:'v8-text-button'}));
  $('invest').querySelector('.v7-invest-hero')?.after(card);
 }
+/* ---------- Net worth: what you have minus what you owe, month by month ---------- */
+// Worked out from the ledger rather than stored, so it never needs syncing: account balances at the date,
+// investments recorded in the app, minus card dues. Held investments were owned before they were entered,
+// so they count in every month at their latest value instead of appearing as a jump.
+function v9NetWorth(asof=today()){
+ let cash=0,dues=0;for(const a of state.accounts){const b=balance(a,asof);if(isCard(a))dues+=Math.max(0,-b);else cash+=b}
+ const added=state.records.filter(r=>kind(r.category)==='aside'&&r.date<=asof).reduce((n,r)=>n+reportCents(r),0)/100;
+ const held=v9Holdings().reduce((n,h)=>n+h.value,0)/100;
+ return {cash,invest:added+held,dues,total:cash+added+held-dues};
+}
+function v9MonthEnd(month){const d=new Date(month+'-01T12:00:00');d.setMonth(d.getMonth()+1);d.setDate(0);const end=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return end<today()?end:today()}
+function v9NetWorthCard(){
+ if(page!=='invest'||!state.accounts.length)return;$('v9NetWorth')?.remove();
+ const now=v9NetWorth(),card=node('section','v8-card v9-networth');card.id='v9NetWorth';
+ card.append(node('small','v9-networth-label','Net worth'),node('strong','v9-networth-total',money(now.total)));
+ // Up to twelve month-ends, starting from the first account's opening month.
+ const first=state.accounts.map(a=>a.date).sort()[0].slice(0,7),months=[];for(let m=today().slice(0,7);m>=first&&months.length<12;m=v9MonthShift(m,-1))months.unshift(m);
+ const values=months.map(m=>v9NetWorth(v9MonthEnd(m)).total);
+ if(months.length>1){const prev=values.at(-2),diff=now.total-prev;card.append(node('small','v9-compare '+(diff>=0?'down':'up'),(Math.round(diff)===0?'No change':(diff>0?'+':'−')+money(Math.abs(diff)))+' since end of '+v9MonthName(months.at(-2))))}
+ const parts=node('div','v9-networth-parts');for(const [label,v,neg] of [['Bank & cash',now.cash],['Investments',now.invest],['Card dues',now.dues,true]]){if(neg&&!v)continue;const row=node('div','v9-networth-row');row.append(node('span',null,label),node('strong',null,(neg?'−':'')+money(v)));parts.append(row)}card.append(parts);
+ if(months.length>1){const trend=node('div','v9-trend v9-networth-trend'),max=Math.max(1,...values.map(Math.abs));trend.setAttribute('role','img');trend.setAttribute('aria-label','Net worth at each month end: '+months.map((m,i)=>v9MonthName(m)+' '+money(values[i])).join(', '));
+  months.forEach((m,i)=>{const col=node('div','v9-bar'+(i===months.length-1?' current':'')),bar=node('i');bar.style.height=Math.max(values[i]>0?6:2,Math.abs(values[i])/max*64)+'px';col.title=v9MonthName(m)+': '+money(values[i]);col.append(node('small','v9-bar-value',v9Compact(values[i])),bar,node('small',null,v9MonthName(m)));trend.append(col)});card.append(trend)}
+ card.append(node('p','v9-hint','Held investments use their latest value. Update them from "Investments you hold".'));
+ $('invest').prepend(card);
+}
 function initV9Wealth(){
  v7Invest=v9Invest;
- const priorWealth=v8Wealth;v8Wealth=function(){priorWealth();v9HoldingsCard()};
- render();
+ const priorWealth=v8Wealth;v8Wealth=function(){priorWealth();v9HoldingsCard();v9NetWorthCard()};
 }
