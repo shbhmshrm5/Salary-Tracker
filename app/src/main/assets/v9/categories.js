@@ -54,7 +54,7 @@ function v9CategoryPage(names,opts={}){
   if(!shown.length){list.append(node('p','v8-empty',query?'No entries match your search.':'No entries yet.'));return}
   list.append(node('p','v9-count',shown.length+(shown.length===1?' entry':' entries')+(part!=null||query?' · '+money(shown.reduce((n,r)=>n+reportCents(r),0)/100):'')));
   let day='';for(const r of shown){if(r.date!==day){day=r.date;list.append(node('h3','v8-day',v8Day(day)+(day.slice(0,4)===today().slice(0,4)?'':' '+day.slice(0,4))))}
-   const b=action('',()=>{d.close();openEntry(r.id)});b.className='v8-row';const glyph=node('span','v8-row-icon');glyph.innerHTML=icon(r.category);glyph.setAttribute('aria-hidden','true');
+   const b=action('',()=>{d.close();openEntry(r.id)});b.className='v8-row';b.dataset.record=r.id;const glyph=node('span','v8-row-icon');glyph.innerHTML=icon(r.category);glyph.setAttribute('aria-hidden','true');
    const acc=r.paidBy==='other'?'Paid by '+(r.person||'others'):account(r.accountId)?displayAccountName(account(r.accountId)):'No account';
    const text=node('span','v8-row-text');text.append(node('strong',null,r.note||r.subcategory||r.category),node('small',null,[single?r.subcategory:categoryLabel(r),acc].filter(Boolean).join(' · ')));
    const credit=recordCredit(r);b.append(glyph,text,node('strong','v8-amount'+(credit?' plus':''),(credit?'+':'−')+money(r.amount)));list.append(b)}
@@ -170,5 +170,5 @@ function initV9Categories(){
  v9CategoryTaps();
  const priorNotices=v8HomeNotices;v8HomeNotices=function(){priorNotices();v9NoAccountNotice()};
  const priorChart=renderChart;renderChart=function(list,sum){if($('chartMode').value==='categories')return v9InsightsCategories($('chart'),list);return priorChart(list,sum)};
- render();
+ // initV9Entry, which runs last, draws once for all v9 changes.
 }

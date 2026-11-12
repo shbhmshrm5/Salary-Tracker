@@ -22,8 +22,10 @@ modernAppearance=function(){
  d.append(grid,node('p','v8-sub','Text size follows your phone’s display settings.'));
 };
 settingsOriginals.settingsAppearance=modernAppearance;
-function v8PeriodLabel(){if(reportMode==='month'){const [y,m]=$('month').value.split('-').map(Number);if(y&&m)return new Date(y,m-1,1).toLocaleString('en-IN',{month:'long',year:'numeric'})}return reportRange().label}
-function v8Short(date){const d=new Date(date+'T12:00:00'),same=date.slice(0,4)===today().slice(0,4);return d.toLocaleDateString('en-IN',same?{day:'numeric',month:'short'}:{day:'numeric',month:'short',year:'numeric'})}
+const v8MonthYearFormat=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric'});
+function v8PeriodLabel(){if(reportMode==='month'){const [y,m]=$('month').value.split('-').map(Number);if(y&&m)return v8MonthYearFormat.format(new Date(y,m-1,1))}return reportRange().label}
+const v8DayMonthFormat=new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'short'});
+function v8Short(date){const d=new Date(date+'T12:00:00'),same=date.slice(0,4)===today().slice(0,4);return same?v8DayMonthFormat.format(d):displayDate(date)}
 function v8Day(date){const t=today(),d=new Date(t+'T12:00:00');d.setDate(d.getDate()-1);const y=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return date===t?'Today':date===y?'Yesterday':v8Short(date)}
 function v8Home(){
  let el=$('v8Home');if(!el){el=node('div');el.id='v8Home';$('home').prepend(el)}el.replaceChildren();
@@ -57,7 +59,7 @@ function v8SpendCard(){
 function v8Recent(){
  const wrap=node('section','v8-recent'),head=node('div','v8-recent-head');head.append(node('h2',null,'Recent'),action('See all',()=>v7AllEntries()));wrap.append(head);
  const list=modernRecords(reportRange()).slice(0,5);if(!list.length){wrap.append(node('p','v8-empty','Your entries for '+v8PeriodLabel()+' will appear here.'));return wrap}
- let day='';for(const r of list){if(r.date!==day){day=r.date;wrap.append(node('h3','v8-day',v8Day(day)))}const b=action('',()=>openEntry(r.id));b.className='v8-row';const glyph=node('span','v8-row-icon');glyph.innerHTML=icon(r.category);glyph.setAttribute('aria-hidden','true');const text=node('span','v8-row-text'),acc=r.paidBy==='other'?'Paid by '+(r.person||'others'):account(r.accountId)?displayAccountName(account(r.accountId)):'';text.append(node('strong',null,r.note||r.category),node('small',null,[categoryLabel(r),acc].filter(Boolean).join(' · ')));const credit=recordCredit(r),amount=node('strong','v8-amount'+(credit?' plus':kind(r.category)==='aside'?' save':''),(credit?'+':'−')+money(r.amount));b.append(glyph,text,amount);wrap.append(b)}
+ let day='';for(const r of list){if(r.date!==day){day=r.date;wrap.append(node('h3','v8-day',v8Day(day)))}const b=action('',()=>openEntry(r.id));b.className='v8-row';b.dataset.record=r.id;const glyph=node('span','v8-row-icon');glyph.innerHTML=icon(r.category);glyph.setAttribute('aria-hidden','true');const text=node('span','v8-row-text'),acc=r.paidBy==='other'?'Paid by '+(r.person||'others'):account(r.accountId)?displayAccountName(account(r.accountId)):'';text.append(node('strong',null,r.note||r.category),node('small',null,[categoryLabel(r),acc].filter(Boolean).join(' · ')));const credit=recordCredit(r),amount=node('strong','v8-amount'+(credit?' plus':kind(r.category)==='aside'?' save':''),(credit?'+':'−')+money(r.amount));b.append(glyph,text,amount);wrap.append(b)}
  return wrap;
 }
 function initV8(){

@@ -56,3 +56,45 @@ body.v8.v9-pad-open #form .form-actions{margin-top:290px}
 .v9-gain{font-size:12px;font-variant-numeric:tabular-nums}
 .v9-gain.up{color:var(--income-color)}
 .v9-gain.down{color:var(--spend-color)}
+/* Add entry: "Again" chips and note suggestions */
+.v9-again{display:flex;align-items:center;gap:7px;overflow-x:auto;padding:8px 0 2px;margin:0 0 4px;scrollbar-width:none}
+.v9-again::-webkit-scrollbar{display:none}
+.v9-again[hidden]{display:none}
+.v9-again-title{flex:none;font-size:11.5px;font-weight:650;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.v9-again-chip{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px 6px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--ink);font-size:13px;font-weight:600;white-space:nowrap}
+.v9-again-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--tint);color:var(--accent)}
+.v9-again-icon svg{width:14px;height:14px}
+.v9-note-suggest{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:6px 0 0}
+.v9-note-suggest:empty{display:none}
+.v9-note-chip{min-height:34px;padding:4px 12px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--ink);font-size:13px}
+/* Pay from: account button and sheet */
+.v9-hidden-select{display:none!important}
+.v9-account-pick{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:6px 2px;background:transparent;border:0;color:var(--ink);font-size:16px;font-weight:600;text-align:left}
+.v9-account-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v9-account-caret{color:var(--muted);font-size:12px}
+.v9-account-pick .bank-mark,.v9-account-logo .bank-mark{flex:none}
+.v9-account-logo{flex:none;width:38px;height:38px;display:grid;place-items:center}
+.v9-account-row[aria-pressed=true] strong{color:var(--accent)}
+.v9-account-check{color:var(--accent);font-weight:700}
+/* Swipe: the row slides to reveal what letting go will do */
+[data-record]{touch-action:pan-y;position:relative}
+[data-record].v9-swiping{transition:none;z-index:1}
+[data-record]:not(.v9-swiping){transition:transform .18s}
+[data-record].v9-swiping::before,[data-record].v9-swiping::after{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;font-weight:700;white-space:nowrap;pointer-events:none}
+[data-record].v9-swiping::before{content:"↻ Repeat";right:calc(100% + 14px);color:var(--income-color);opacity:.45}
+[data-record].v9-swiping::after{content:"Delete";left:calc(100% + 14px);color:var(--spend-color);opacity:.45}
+[data-record].v9-swipe-repeat::before,[data-record].v9-swipe-delete::after{opacity:1}
+/* The account name needs more room than "Me" or the date */
+body.v8 .v8-entry-meta{grid-template-columns:minmax(0,1.6fr) minmax(0,.8fr) minmax(0,1.1fr)}
+body.v8 .v8-entry-meta .v9-account-pick{min-height:34px;padding:2px 0;font-size:14px;gap:6px}
+body.v8 .v8-entry-meta .v9-account-pick .bank-logo img,body.v8 .v8-entry-meta .v9-account-pick .bank-mark svg{width:18px;height:18px}
+/* Wealth: net worth */
+.v9-networth{display:flex;flex-direction:column;gap:2px}
+.v9-networth-label{font-size:13px;color:var(--muted)}
+.v9-networth-total{font-family:Fraunces,Georgia,serif;font-size:34px;font-weight:600;letter-spacing:-.5px;line-height:1.15;font-variant-numeric:tabular-nums}
+.v9-networth .v9-compare{font-size:13px}
+.v9-networth-parts{display:flex;flex-direction:column;margin:12px 0 4px;border-top:1px solid var(--border)}
+.v9-networth-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}
+.v9-networth-row strong{font-variant-numeric:tabular-nums;font-weight:650}
+.v9-networth-trend{margin:10px 0 0}
+.v9-networth .v9-hint{margin-top:8px}
