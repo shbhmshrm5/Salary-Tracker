@@ -98,3 +98,16 @@ body.v8 .v8-entry-meta .v9-account-pick .bank-logo img,body.v8 .v8-entry-meta .v
 .v9-networth-row strong{font-variant-numeric:tabular-nums;font-weight:650}
 .v9-networth-trend{margin:10px 0 0}
 .v9-networth .v9-hint{margin-top:8px}
+/* Send: a "To" field replaces categories */
+.v9-send-block[hidden]{display:none}
+.v9-send-block{margin:6px 0 8px}
+.v9-send-block label{display:block;font-size:12px;font-weight:650;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.v9-send-block input{width:100%;min-height:46px;padding:10px 14px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--ink);font-size:16px}
+.v9-send-people{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.v9-send-people:empty{display:none}
+.v9-send-people .selected{border-color:var(--accent);color:var(--accent);background:var(--tint)}
+#form.v9-send-mode #categories,#form.v9-send-mode .v9-category-label,#form.v9-send-mode #moreCategories,#form.v9-send-mode #entrySubcategoryGroup,#form.v9-send-mode .category-tools{display:none!important}
+.v9-send-review{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.v9-send-review input{width:20px;height:20px;flex:none;accent-color:var(--accent)}
+.v9-sent-row small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#entry .v9-send-block input{border:1px solid var(--border)!important;background:var(--surface)!important;border-radius:14px!important;padding:10px 14px!important;font-size:16px!important;text-align:left}
