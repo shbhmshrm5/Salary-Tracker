@@ -1,5 +1,6 @@
 // Category names are immutable ledger labels. Optional subcategories never change totals.
-function baseCategoryKind(c){return ['Salary','Bonus','Freelance','Other income'].includes(c)?'income':['SIP','Savings','Investments'].includes(c)?'aside':'expense'}
+// "Sent to people" is its own kind: it lowers a balance like any outflow but is never counted as spending.
+function baseCategoryKind(c){return ['Salary','Bonus','Freelance','Other income'].includes(c)?'income':['SIP','Savings','Investments'].includes(c)?'aside':c==='Sent to people'?'send':'expense'}
 function categoryNames(d){return BASE_CATEGORIES.concat((d?.categoryDefinitions||[]).filter(x=>!BASE_CATEGORIES.includes(x.name)).map(x=>x.name))}
 function categoryChildren(c,d=state){return d?.categoryDefinitions?.find(x=>x.name===c)?.subcategories||[]}
 function validSubcategory(c,s,d){return s==null||s===''||typeof s==='string'&&categoryChildren(c,d).includes(s)}

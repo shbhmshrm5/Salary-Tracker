@@ -47,10 +47,10 @@ function v9CategoryPage(names,opts={}){
  const summary=node('div','v9-summary'),trend=node('div','v9-trend'),parts=node('div','v9-parts'),search=node('input','v9-search'),list=node('div','v9-list');
  search.type='search';search.placeholder='Search '+(single?title:'these categories');search.setAttribute('aria-label','Search entries');search.oninput=()=>{query=search.value.trim().toLowerCase();drawList()};
  d.append(scopeTabs,summary,trend,parts,search,list);
- if(single&&kind(names[0])==='expense'){const add=action('+ Add '+names[0]+' expense',()=>{d.close();openEntry(null,names[0]);v9Manual=true});add.className='v9-add';d.append(add)}
+ if(single&&['expense','send'].includes(kind(names[0]))){const add=action(kind(names[0])==='send'?'+ Send money':'+ Add '+names[0]+' expense',()=>{d.close();openEntry(null,names[0]);v9Manual=true});add.className='v9-add';d.append(add)}
  let records=[];
  const drawList=()=>{
-  list.replaceChildren();const shown=records.filter(r=>(part==null||(single?(r.subcategory||''):r.category)===part)&&(!query||[r.note,r.category,r.subcategory,account(r.accountId)?.name,r.amount,displayDate(r.date)].join(' ').toLowerCase().includes(query)));
+  list.replaceChildren();const shown=records.filter(r=>(part==null||(opts.groupBy?opts.groupBy(r):single?(r.subcategory||''):r.category)===part)&&(!query||[r.note,r.category,r.subcategory,account(r.accountId)?.name,r.amount,displayDate(r.date)].join(' ').toLowerCase().includes(query)));
   if(!shown.length){list.append(node('p','v8-empty',query?'No entries match your search.':'No entries yet.'));return}
   list.append(node('p','v9-count',shown.length+(shown.length===1?' entry':' entries')+(part!=null||query?' · '+money(shown.reduce((n,r)=>n+reportCents(r),0)/100):'')));
   let day='';for(const r of shown){if(r.date!==day){day=r.date;list.append(node('h3','v8-day',v8Day(day)+(day.slice(0,4)===today().slice(0,4)?'':' '+day.slice(0,4))))}
@@ -73,10 +73,10 @@ function v9CategoryPage(names,opts={}){
    trend.setAttribute('role','img');trend.setAttribute('aria-label','Last six months: '+months.map((m,i)=>v9MonthName(m)+' '+money(values[i]/100)).join(', '));
    months.forEach((m,i)=>{const col=node('div','v9-bar'+(m===month?' current':'')),bar=node('i');bar.style.height=Math.max(values[i]>0?6:2,values[i]/max*64)+'px';col.title=v9MonthName(m)+': '+money(values[i]/100);col.append(node('small','v9-bar-value',values[i]?v9Compact(values[i]/100):''),bar,node('small',null,v9MonthName(m)));trend.append(col)})}
   // Breakdown by subcategory (one category) or by category ("Other categories"); a chip filters the list.
-  parts.replaceChildren();const groups=new Map();for(const r of records){const key=single?(r.subcategory||''):r.category;groups.set(key,(groups.get(key)||0)+reportCents(r))}
+  parts.replaceChildren();const groupOf=opts.groupBy||(r=>single?(r.subcategory||''):r.category),groups=new Map();for(const r of records){const key=groupOf(r);groups.set(key,(groups.get(key)||0)+reportCents(r))}
   const entries=[...groups].sort((a,b)=>b[1]-a[1]);
   if(entries.length>1||(entries.length===1&&entries[0][0]!=='')){
-   parts.append(node('h3','v9-parts-title',single?'Subcategories':'Categories'));
+   parts.append(node('h3','v9-parts-title',opts.partsTitle||(single?'Subcategories':'Categories')));
    for(const [key,v] of entries){const b=action('',()=>{part=part===key?null:key;draw()});b.className='v9-part';b.setAttribute('aria-pressed',String(part===key));const fill=node('i','v9-part-fill');fill.style.width=(total>0?Math.max(0,v/total*100):0)+'%';b.append(fill,node('span',null,key||(single?'No subcategory':'')),node('strong',null,money(v/100)));parts.append(b)}
   }
   drawList();
